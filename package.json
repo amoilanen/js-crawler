@@ -1,0 +1,32 @@
+{
+  "name": "js-crawler",
+  "version": "0.1.0",
+  "description": "Web crawler for Node.js",
+  "main": "crawler.js",
+  "directories": {
+    "example": "examples"
+  },
+  "dependencies": {
+    "request": "~2.33.0",
+    "underscore": "~1.6.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antivanov/js-crawler"
+  },
+  "keywords": [
+    "web-crawler",
+    "crawler",
+    "scraping"
+  ],
+  "author": "Anton Ivanov, anton.al.ivanov@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/antivanov/js-crawler/issues"
+  },
+  "homepage": "https://github.com/antivanov/js-crawler"
+}
