@@ -78,7 +78,7 @@ crawler.crawl("http://www.reddit.com/r/javascript", function(page) {
 });
 ```
 
-Default value is a function that always returns `true`;
+Default value is a function that always returns `true`.
 
 ## License
 
