@@ -88,10 +88,10 @@ MIT License
 Credits
 ---------------
 
-The crawler depends on the following modules:
+The crawler depends on the following Node.JS modules:
 
-* Underscore.js [underscore-js]
-* Request [request]
+* [Underscore.js]
+* [Request]
 
-[underscore-js]: http://underscorejs.org/
-[request]: https://github.com/mikeal/request
+[Underscore.js]: http://underscorejs.org/
+[Request]: https://github.com/mikeal/request
