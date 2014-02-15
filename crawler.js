@@ -7,12 +7,16 @@ function Crawler() {
   this.visitedURLs = {};
   this.depth = DEFAULT_DEPTH;
   this.ignoreRelative = false;
+  this.shouldCrawl = function() {
+    return true;
+  };
 }
 
 Crawler.prototype.configure = function(options) {
   this.depth = (options && options.depth) || this.depth;
   this.depth = Math.max(this.depth, 0);
   this.ignoreRelative = (options && options.ignoreRelative) || this.ignoreRelative;
+  this.shouldCrawl = (options && options.shouldCrawl) || this.shouldCrawl;
   return this;
 };
 
@@ -38,7 +42,7 @@ Crawler.prototype.crawlUrl = function(url, depth, onSuccess, onFailure) {
     } else if (onFailure) {
       onFailure({
         url: url,
-        status: response.statusCode
+        status: response ? response.statusCode : undefined
       });
     }
   });
@@ -56,7 +60,10 @@ Crawler.prototype.getAllUrls = function(baseUrl, body) {
     link = link.indexOf("://") >=0 ? link : baseUrl + link;
     return link;
   });
-  return _.uniq(links);
+  return _.chain(links)
+    .uniq()
+    .filter(this.shouldCrawl)
+    .value();
 };
 
 Crawler.prototype.crawlUrls = function(urls, depth, onSuccess, onFailure) {
