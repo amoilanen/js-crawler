@@ -50,7 +50,7 @@ Crawler.prototype.getAllUrls = function(baseUrl, body) {
   var links = body.match(linksRegex) || [];
 
   links = _.map(links, function(link) {
-    var match = /href=\"(.*?)\"/.exec(link);
+    var match = /href=\"(.*?)[#\"]/.exec(link);
 
     link = match[1];
     link = link.indexOf("://") >=0 ? link : baseUrl + link;
