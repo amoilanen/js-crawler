@@ -1,24 +1,52 @@
 js-crawler
 ==========
 
-Web crawler for Node.JS
+Web crawler for Node.JS, both HTTP and HTTPS are supported.
 
-### Installation
+## Installation
 
 ```
 npm install js-crawler
 ```
 
-### Usage
+## Usage
 
 The crawler provides intuitive interface to crawl links on web sites. Example:
 
 ```javascript
 var Crawler = require("../crawler.js");
 
-new Crawler().crawl("http://www.google.com", 3, function onSuccess(page) {
-  console.log(page.url);
-});
+new Crawler().configure({depth: 3})
+  .crawl("http://www.google.com", function onSuccess(page) {
+    console.log(page.url);
+  });
 ```
 
+The call to `configure` is optional, if it is omitted the default option values will be used.
 
+#### Supported options
+
+* `depth` - the depth to which the links from the original page will be crawled.
+Example: if `site1.com` contains a link to `site2.com` which contains a link to `site3.com`, `depth` is 2 and we crawl from `site1.com` then we will crawl `site2.com` but will not crawl `site3.com` as it will be too deep. 
+
+The default value is `2`.
+
+* `ignoreRelative` - ignore the relative URLs, the relative URLs on the same page will be ignored when crawling, so `/wiki/Quick-Start` will not be crawled and `https://github.com/explore` will be crawled. This option can be useful when we are mainly interested in sites to which the current sites refers and not just different sections of the original site.
+
+The default value is `false`.
+
+## License
+
+MIT License
+(c) [Anton Ivanov](http://smthngsmwhr.wordpress.com/)
+
+Credits
+---------------
+
+The crawler depends on the following modules:
+
+* Underscore.js [underscore-js]
+* Request [request]
+
+[underscore-js]: http://underscorejs.org/
+[request]: https://github.com/mikeal/request

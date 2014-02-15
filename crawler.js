@@ -1,11 +1,26 @@
 var request = require("request");
 var _ = require("underscore");
 
+var DEFAULT_DEPTH = 2;
+
 function Crawler() {
   this.visitedURLs = {};
+  this.depth = DEFAULT_DEPTH;
+  this.ignoreRelative = false;
 }
 
-Crawler.prototype.crawl = function (url, depth, onSuccess, onFailure) {
+Crawler.prototype.configure = function(options) {
+  this.depth = (options && options.depth) || this.depth;
+  this.depth = Math.max(this.depth, 0);
+  this.ignoreRelative = (options && options.ignoreRelative) || this.ignoreRelative;
+  return this;
+};
+
+Crawler.prototype.crawl = function (url, onSuccess, onFailure) {
+  this.crawlUrl(url, this.depth, onSuccess, onFailure);
+};
+
+Crawler.prototype.crawlUrl = function(url, depth, onSuccess, onFailure) {
   if (0 == depth || this.visitedURLs[url]) {
     return;
   }
@@ -19,7 +34,7 @@ Crawler.prototype.crawl = function (url, depth, onSuccess, onFailure) {
           status: response.statusCode,
           content: body
       });
-      self.crawlURLs(self.getAllURLs(url, body), depth - 1, onSuccess, onFailure);
+      self.crawlUrls(self.getAllUrls(url, body), depth - 1, onSuccess, onFailure);
     } else if (onFailure) {
       onFailure({
         url: url,
@@ -29,8 +44,10 @@ Crawler.prototype.crawl = function (url, depth, onSuccess, onFailure) {
   });
 };
 
-Crawler.prototype.getAllURLs = function(baseUrl, body) {
-  var links = body.match(/<a[^>]+?href="(.*?)"/gm) || [];
+Crawler.prototype.getAllUrls = function(baseUrl, body) {
+  var self = this;
+  var linksRegex = self.ignoreRelative ? /<a[^>]+?href=".*?:\/\/.*?"/gm : /<a[^>]+?href=".*?"/gm;
+  var links = body.match(linksRegex) || [];
 
   links = _.map(links, function(link) {
     var match = /href=\"(.*?)\"/.exec(link);
@@ -42,11 +59,11 @@ Crawler.prototype.getAllURLs = function(baseUrl, body) {
   return _.uniq(links);
 };
 
-Crawler.prototype.crawlURLs = function(urls, depth, onSuccess, onFailure) {
+Crawler.prototype.crawlUrls = function(urls, depth, onSuccess, onFailure) {
   var self = this;
 
   _.each(urls, function(url) {
-    self.crawl(url, depth, onSuccess, onFailure);
+    self.crawlUrl(url, depth, onSuccess, onFailure);
   });
 };
 
