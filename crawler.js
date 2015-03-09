@@ -58,7 +58,7 @@ Crawler.prototype.getAllUrls = function(baseUrl, body) {
     var match = /href=\"(.*?)[#\"]/.exec(link);
 
     link = match[1];
-    link = link = url.resolve(baseUrl, link);
+    link = url.resolve(baseUrl, link);
     return link;
   });
   return _.chain(links)
