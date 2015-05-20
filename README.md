@@ -49,6 +49,23 @@ new Crawler().configure({depth: 3})
 
 Here the second callback will be called for each page that could not be accessed (maybe because the corresponding site is down). `status` may be not defined.
 
+#### Knowing when all crawling is finished
+
+Extra callback can be passed that will be called when all the urls have been crawled and crawling has finished.
+All crawled urls will be passed to that callback as an argument.
+
+```javascript
+var Crawler = require("../crawler.js");
+
+new Crawler().configure({depth: 2})
+  .crawl("http://www.google.com", function onSuccess(page) {
+    console.log(page.url);
+  }, null, function onAllFinished(crawledUrls) {
+    console.log('All crawling finished');
+    console.log(crawledUrls);
+  });
+```
+
 #### Supported options
 
 * `depth` - the depth to which the links from the original page will be crawled.
