@@ -32,8 +32,6 @@ Crawler.prototype._startedCrawling = function(url) {
 };
 
 //TODO: Allow passing options instead of 3 mandatory callbacks
-
-//TODO: Forget crawled URLs
 Crawler.prototype.forgetCrawled = function() {
   this.crawledUrls = {};
   return this;
@@ -43,7 +41,7 @@ Crawler.prototype._finishedCrawling = function(url, onAllFinished) {
   var indexOfUrl = this._beingCrawled.indexOf(url);
 
   this._beingCrawled.splice(indexOfUrl, 1);
-  if (this._beingCrawled.length === 0) {
+  if ((this._beingCrawled.length === 0) && onAllFinished) {
     onAllFinished(_.keys(this.crawledUrls));
   }
 }

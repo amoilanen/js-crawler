@@ -66,6 +66,10 @@ new Crawler().configure({depth: 2})
   });
 ```
 
+#### Forgetting crawled urls
+
+By default a crawler instance will remember all the urls it ever crawled and will not crawl them again. In order to make it forget all the crawled urls the method `forgetCrawled` can be used. There is another way to solve the same problem: create a new instance of a crawler.
+
 #### Supported options
 
 * `depth` - the depth to which the links from the original page will be crawled.
