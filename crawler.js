@@ -22,8 +22,14 @@ Crawler.prototype.configure = function(options) {
   return this;
 };
 
-Crawler.prototype.crawl = function (url, onSuccess, onFailure, onAllFinished) {
-  this._crawlUrl(url, this.depth, onSuccess, onFailure, onAllFinished);
+Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
+  if (!(typeof url === "string")) {
+    var options = url;
+
+    this._crawlUrl(options.url, this.depth,  options.success, options.failure, options.finished);
+  } else {
+    this._crawlUrl(url, this.depth, onSuccess, onFailure, onAllFinished);
+  }
   return this;
 };
 
@@ -31,7 +37,6 @@ Crawler.prototype._startedCrawling = function(url) {
   this._beingCrawled.push(url);
 };
 
-//TODO: Allow passing options instead of 3 mandatory callbacks
 Crawler.prototype.forgetCrawled = function() {
   this.crawledUrls = {};
   return this;
@@ -54,19 +59,25 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
 
   this._startedCrawling(url);
   request(url, function(error, response, body) {
+    self.crawledUrls[url] = true;
     if (!error && response.statusCode == 200) {
-      self.crawledUrls[url] = true;
       onSuccess({
         url: url,
         status: response.statusCode,
-        content: body
+        content: body,
+        error: error,
+        response: response,
+        body: body
       });
       self._crawlUrls(self._getAllUrls(url, body), depth - 1, onSuccess, onFailure, onAllFinished);
       self._finishedCrawling(url, onAllFinished);
     } else if (onFailure) {
       onFailure({
         url: url,
-        status: response ? response.statusCode : undefined
+        status: response ? response.statusCode : undefined,
+        error: error,
+        response: response,
+        body: body
       });
       self._finishedCrawling(url, onAllFinished);
     }

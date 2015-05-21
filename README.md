@@ -30,6 +30,31 @@ The call to `configure` is optional, if it is omitted the default option values 
 * `content` - body of the page (usually HTML)
 * `status` - the HTTP status code
 
+Extra information can be retrieved from the rest of the `page` fields: `error`, `response`, `body` which are identical to the ones passed to the callback of `request` invocation of the [Request](https://github.com/mikeal/request) module.
+
+#### Options-based API
+
+Alternative APIs for passing callbacks to the `crawl` function.
+
+```javascript
+var Crawler = require("../crawler.js");
+
+var crawler = new Crawler().configure({ignoreRelative: false, depth: 2});
+
+crawler.crawl({
+  url: "https://github.com",
+  success: function(page) {
+    console.log(page.url);
+  },
+  failure: function(page) {
+    console.log(page.status);
+  },
+  finished: function(crawledUrls) {
+    console.log(crawledUrls);
+  }
+});
+```
+
 #### Handling errors
 
 It is possible to pass an extra callback to handle errors, consider the modified example above:
