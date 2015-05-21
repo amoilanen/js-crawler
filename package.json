@@ -1,6 +1,6 @@
 {
   "name": "js-crawler",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Web crawler for Node.js",
   "main": "crawler.js",
   "directories": {
@@ -21,7 +21,10 @@
   "keywords": [
     "web-crawler",
     "crawler",
-    "scraping"
+    "scraping",
+    "website-crawler",
+    "crawling",
+    "web-bot"
   ],
   "author": "Anton Ivanov, anton.al.ivanov@gmail.com",
   "license": "MIT",
