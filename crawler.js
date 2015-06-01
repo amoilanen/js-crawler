@@ -3,11 +3,13 @@ var _ = require("underscore");
 var url = require('url');
 
 var DEFAULT_DEPTH = 2;
+var DEFAULT_USERAGENT = 'crawler/js-crawler';
 
 function Crawler() {
   this.crawledUrls = {};
   this.depth = DEFAULT_DEPTH;
   this.ignoreRelative = false;
+  this.userAgent = DEFAULT_USERAGENT;
   this._beingCrawled = [];
   this.shouldCrawl = function() {
     return true;
@@ -18,6 +20,7 @@ Crawler.prototype.configure = function(options) {
   this.depth = (options && options.depth) || this.depth;
   this.depth = Math.max(this.depth, 0);
   this.ignoreRelative = (options && options.ignoreRelative) || this.ignoreRelative;
+  this.userAgent = (options && options.userAgent) || this.userAgent;
   this.shouldCrawl = (options && options.shouldCrawl) || this.shouldCrawl;
   return this;
 };
@@ -58,7 +61,12 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
   var self = this;
 
   this._startedCrawling(url);
-  request(url, function(error, response, body) {
+  request({
+    url : url,
+    headers: {
+      'User-Agent' : this.userAgent
+    }
+  }, function(error, response, body) {
     self.crawledUrls[url] = true;
     if (!error && response.statusCode == 200) {
       onSuccess({
