@@ -106,6 +106,10 @@ The default value is `2`.
 
 The default value is `false`.
 
+* `userAgent` - User agent to send with crawler requests.
+
+The default value is `crawler/js-crawler`
+
 * `shouldCrawl` - function that specifies whether an url should be crawled, returns `true` or `false`.
 
 Example:
