@@ -62,9 +62,9 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
 
   this._startedCrawling(url);
   request({
-    url : url,
+    url: url,
     headers: {
-      'User-Agent' : this.userAgent
+      'User-Agent': this.userAgent
     }
   }, function(error, response, body) {
     self.crawledUrls[url] = true;
