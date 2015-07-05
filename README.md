@@ -14,7 +14,7 @@ npm install js-crawler
 The crawler provides intuitive interface to crawl links on web sites. Example:
 
 ```javascript
-var Crawler = require("../crawler.js");
+var Crawler = require("js-crawler");
 
 new Crawler().configure({depth: 3})
   .crawl("http://www.google.com", function onSuccess(page) {
@@ -37,7 +37,7 @@ Extra information can be retrieved from the rest of the `page` fields: `error`, 
 Alternative APIs for passing callbacks to the `crawl` function.
 
 ```javascript
-var Crawler = require("../crawler.js");
+var Crawler = require("js-crawler");
 
 var crawler = new Crawler().configure({ignoreRelative: false, depth: 2});
 
@@ -60,7 +60,7 @@ crawler.crawl({
 It is possible to pass an extra callback to handle errors, consider the modified example above:
 
 ```javascript
-var Crawler = require("../crawler.js");
+var Crawler = require("js-crawler");
 
 new Crawler().configure({depth: 3})
   .crawl("http://www.google.com", function(page) {
@@ -80,7 +80,7 @@ Extra callback can be passed that will be called when all the urls have been cra
 All crawled urls will be passed to that callback as an argument.
 
 ```javascript
-var Crawler = require("../crawler.js");
+var Crawler = require("js-crawler");
 
 new Crawler().configure({depth: 2})
   .crawl("http://www.google.com", function onSuccess(page) {
@@ -115,7 +115,7 @@ The default value is `crawler/js-crawler`
 Example:
 
 ```javascript
-var Crawler = require("../crawler.js");
+var Crawler = require("js-crawler");
 
 var crawler = new Crawler().configure({
   shouldCrawl: function(url) {
