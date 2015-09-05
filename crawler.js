@@ -1,5 +1,5 @@
-var request = require("request");
-var _ = require("underscore");
+var request = require('request');
+var _ = require('underscore');
 var url = require('url');
 
 var DEFAULT_DEPTH = 2;
@@ -26,10 +26,10 @@ Crawler.prototype.configure = function(options) {
 };
 
 Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
-  if (!(typeof url === "string")) {
+  if (!(typeof url === 'string')) {
     var options = url;
 
-    this._crawlUrl(options.url, this.depth,  options.success, options.failure, options.finished);
+    this._crawlUrl(options.url, this.depth, options.success, options.failure, options.finished);
   } else {
     this._crawlUrl(url, this.depth, onSuccess, onFailure, onAllFinished);
   }
@@ -55,7 +55,7 @@ Crawler.prototype._finishedCrawling = function(url, onAllFinished) {
 }
 
 Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFinished) {
-  if (0 == depth || this.crawledUrls[url]) {
+  if ((depth === 0) || this.crawledUrls[url]) {
     return;
   }
   var self = this;
@@ -68,7 +68,7 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
     }
   }, function(error, response, body) {
     self.crawledUrls[url] = true;
-    if (!error && response.statusCode == 200) {
+    if (!error && (response.statusCode === 200)) {
       onSuccess({
         url: url,
         status: response.statusCode,
@@ -78,7 +78,6 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
         body: body
       });
       self._crawlUrls(self._getAllUrls(url, body), depth - 1, onSuccess, onFailure, onAllFinished);
-      self._finishedCrawling(url, onAllFinished);
     } else if (onFailure) {
       onFailure({
         url: url,
@@ -87,8 +86,8 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
         response: response,
         body: body
       });
-      self._finishedCrawling(url, onAllFinished);
     }
+    self._finishedCrawling(url, onAllFinished);
   });
 };
 
