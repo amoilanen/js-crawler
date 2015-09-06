@@ -91,6 +91,30 @@ new Crawler().configure({depth: 2})
   });
 ```
 
+#### Limiting the rate at which requests are made
+
+By default the maximum number of HTTP requests made per second is 100, but this can be adjusted by using the option `maxRequestsPerSecond` if one wishes not to use too much of network or, opposite, wishes for yet faster crawling.
+
+```javascript
+var Crawler = require("js-crawler");
+
+var crawler = new Crawler().configure({maxRequestsPerSecond: 2});
+
+crawler.crawl({
+  url: "https://github.com",
+  success: function(page) {
+    console.log(page.url);
+  },
+  failure: function(page) {
+    console.log(page.status);
+  }
+});
+```
+
+With this configuration only at most 2 requests per second will be issued. The actual request rate depends on the network speed as well, `maxRequestsPerSecond` configures just the upper boundary.
+
+`maxRequestsPerSecond` can also be fractional, the value `0.1`, for example, would mean maximum one request per 10 seconds.
+
 #### Forgetting crawled urls
 
 By default a crawler instance will remember all the urls it ever crawled and will not crawl them again. In order to make it forget all the crawled urls the method `forgetCrawled` can be used. There is another way to solve the same problem: create a new instance of a crawler.
@@ -111,6 +135,8 @@ The default value is `false`.
 The default value is `crawler/js-crawler`
 
 * `shouldCrawl` - function that specifies whether an url should be crawled, returns `true` or `false`.
+
+* `maxRequestsPerSecond` - the maximum number of HTTP requests per second that can be made by the crawler
 
 Example:
 
