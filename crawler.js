@@ -3,13 +3,61 @@ var _ = require('underscore');
 var url = require('url');
 
 var DEFAULT_DEPTH = 2;
+var DEFAULT_MAX_REQUESTS_PER_SECOND = 100;
 var DEFAULT_USERAGENT = 'crawler/js-crawler';
 
+/*
+ * Executor that handles throttling and task processing rate.
+ */
+function Executor(opts) {
+  this.maxRatePerSecond = opts.maxRatePerSecond;
+  this.onFinished = opts.finished || function() {};
+  this.queue = [];
+  this.isStopped = false;
+  this.timeoutMs = (1 / this.maxRatePerSecond) * 1000;
+}
+
+Executor.prototype.submit = function(func, context, args) {
+  this.queue.push({
+    func: func,
+    context: context,
+    args: args
+  });
+};
+
+Executor.prototype.start = function() {
+  this._processQueueItem();
+};
+
+Executor.prototype.stop = function() {
+  this.isStopped = true;
+};
+
+Executor.prototype._processQueueItem = function() {
+  var self = this;
+
+  if (this.queue.length !== 0) {
+    var nextExecution = this.queue.shift();
+
+    nextExecution.func.apply(nextExecution.context, nextExecution.args);
+  }
+  if (this.isStopped) {
+    return;
+  }
+  setTimeout(function() {
+    self._processQueueItem();
+  }, this.timeoutMs);
+};
+
+/*
+ * Main crawler functionality.
+ */
 function Crawler() {
   this.crawledUrls = {};
   this.depth = DEFAULT_DEPTH;
   this.ignoreRelative = false;
   this.userAgent = DEFAULT_USERAGENT;
+  this.maxRequestsPerSecond = DEFAULT_MAX_REQUESTS_PER_SECOND;
   this._beingCrawled = [];
   this.shouldCrawl = function() {
     return true;
@@ -21,11 +69,16 @@ Crawler.prototype.configure = function(options) {
   this.depth = Math.max(this.depth, 0);
   this.ignoreRelative = (options && options.ignoreRelative) || this.ignoreRelative;
   this.userAgent = (options && options.userAgent) || this.userAgent;
+  this.maxRequestsPerSecond = (options && options.maxRequestsPerSecond) || this.maxRequestsPerSecond;
   this.shouldCrawl = (options && options.shouldCrawl) || this.shouldCrawl;
   return this;
 };
 
 Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
+  this.workExecutor = new Executor({
+    maxRatePerSecond: this.maxRequestsPerSecond
+  });
+  this.workExecutor.start();
   if (!(typeof url === 'string')) {
     var options = url;
 
@@ -49,10 +102,15 @@ Crawler.prototype._finishedCrawling = function(url, onAllFinished) {
   var indexOfUrl = this._beingCrawled.indexOf(url);
 
   this._beingCrawled.splice(indexOfUrl, 1);
-  if ((this._beingCrawled.length === 0) && onAllFinished) {
-    onAllFinished(_.keys(this.crawledUrls));
+  if (this._beingCrawled.length === 0) {
+    onAllFinished && onAllFinished(_.keys(this.crawledUrls));
+    this.workExecutor && this.workExecutor.stop();
   }
 }
+
+Crawler.prototype._requestUrl = function(options, callback) {
+  this.workExecutor.submit(request, null, [options, callback]);
+};
 
 Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFinished) {
   if ((depth === 0) || this.crawledUrls[url]) {
@@ -61,7 +119,7 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
   var self = this;
 
   this._startedCrawling(url);
-  request({
+  this._requestUrl({
     url: url,
     headers: {
       'User-Agent': this.userAgent
