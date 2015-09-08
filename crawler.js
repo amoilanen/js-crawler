@@ -151,11 +151,11 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
 
 Crawler.prototype._getAllUrls = function(baseUrl, body) {
   var self = this;
-  var linksRegex = self.ignoreRelative ? /<a[^>]+?href=".*?:\/\/.*?"/gm : /<a[^>]+?href=".*?"/gm;
+  var linksRegex = self.ignoreRelative ? /<a[^>]+?href=".*?:\/\/.*?"/gmi : /<a[^>]+?href=".*?"/gmi;
   var links = body.match(linksRegex) || [];
 
   links = _.map(links, function(link) {
-    var match = /href=\"(.*?)[#\"]/.exec(link);
+    var match = /href=\"(.*?)[#\"]/i.exec(link);
 
     link = match[1];
     link = url.resolve(baseUrl, link);
