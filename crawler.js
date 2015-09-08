@@ -125,7 +125,12 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
       'User-Agent': this.userAgent
     }
   }, function(error, response, body) {
+    //If no redirects, then response.request.uri.href === url, otherwise last url
+    var lastUrlInRedirectChain = response.request.uri.href;
     self.crawledUrls[url] = true;
+    _.each(this.redirects, function(redirect) {
+      self.crawledUrls[redirect.redirectUri] = true;
+    });
     if (!error && (response.statusCode === 200)) {
       onSuccess({
         url: url,
@@ -135,7 +140,7 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
         response: response,
         body: body
       });
-      self._crawlUrls(self._getAllUrls(url, body), depth - 1, onSuccess, onFailure, onAllFinished);
+      self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), depth - 1, onSuccess, onFailure, onAllFinished);
     } else if (onFailure) {
       onFailure({
         url: url,
