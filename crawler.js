@@ -122,7 +122,7 @@ Crawler.prototype._requestUrl = function(options, callback) {
 
   this.workExecutor.submit(request, null, [options, callback], function shouldSkip() {
     var url = options.url;
-    var willSkip = _.contains(self.crawledUrls, url);
+    var willSkip = _.contains(self.crawledUrls, url) || !self.shouldCrawl(url);
 
     if (willSkip && _.contains(self._beingCrawled, url)) {
       self._finishedCrawling(url, onAllFinished);
