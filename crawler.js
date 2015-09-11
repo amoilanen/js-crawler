@@ -121,6 +121,7 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
   this._startedCrawling(url);
   this._requestUrl({
     url: url,
+    rejectUnauthorized : false,
     headers: {
       'User-Agent': this.userAgent
     }
