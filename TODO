@@ -1,0 +1,8 @@
+Possible enhancements:
+
+1. It should be possible to limit the number of requests not only by the number of requests per second but also
+by the number of concurrent active requests, i.e. maxConcurrentRequests: 5
+
+This should provide yet another sensible approach to limiting the bandwidth being used up.
+
+2. In case there is an error when crawling some url, this url can be queued again, and only fully abandoned from crawling after another 2 repeated failures
