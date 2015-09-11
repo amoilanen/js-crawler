@@ -17,11 +17,12 @@ function Executor(opts) {
   this.timeoutMs = (1 / this.maxRatePerSecond) * 1000;
 }
 
-Executor.prototype.submit = function(func, context, args) {
+Executor.prototype.submit = function(func, context, args, shouldSkip) {
   this.queue.push({
     func: func,
     context: context,
-    args: args
+    args: args,
+    shouldSkip: shouldSkip
   });
 };
 
@@ -38,8 +39,16 @@ Executor.prototype._processQueueItem = function() {
 
   if (this.queue.length !== 0) {
     var nextExecution = this.queue.shift();
+    var shouldSkipNext = (nextExecution.shouldSkip && nextExecution.shouldSkip.call(nextExecution.context));
 
-    nextExecution.func.apply(nextExecution.context, nextExecution.args);
+    if (shouldSkipNext) {
+      setTimeout(function() {
+        self._processQueueItem();
+      });
+      return;
+    } else {
+      nextExecution.func.apply(nextExecution.context, nextExecution.args);
+    }
   }
   if (this.isStopped) {
     return;
@@ -109,7 +118,17 @@ Crawler.prototype._finishedCrawling = function(url, onAllFinished) {
 }
 
 Crawler.prototype._requestUrl = function(options, callback) {
-  this.workExecutor.submit(request, null, [options, callback]);
+  var self = this;
+
+  this.workExecutor.submit(request, null, [options, callback], function shouldSkip() {
+    var url = options.url;
+    var willSkip = _.contains(self.crawledUrls, url);
+
+    if (willSkip && _.contains(self._beingCrawled, url)) {
+      self._finishedCrawling(url, onAllFinished);
+    }
+    return willSkip;
+  });
 };
 
 Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFinished) {
@@ -141,7 +160,9 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
         response: response,
         body: body
       });
-      self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), depth - 1, onSuccess, onFailure, onAllFinished);
+      if (depth > 1) {
+        self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), depth - 1, onSuccess, onFailure, onAllFinished);
+      }
     } else if (onFailure) {
       onFailure({
         url: url,
