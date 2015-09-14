@@ -93,6 +93,8 @@ new Crawler().configure({depth: 2})
 
 #### Limiting the rate at which requests are made
 
+##### maxRequestsPerSecond option
+
 By default the maximum number of HTTP requests made per second is 100, but this can be adjusted by using the option `maxRequestsPerSecond` if one wishes not to use too much of network or, opposite, wishes for yet faster crawling.
 
 ```javascript
@@ -115,6 +117,44 @@ With this configuration only at most 2 requests per second will be issued. The a
 
 `maxRequestsPerSecond` can also be fractional, the value `0.1`, for example, would mean maximum one request per 10 seconds.
 
+##### maxConcurrentRequests option
+
+Even more flexibility is possible when using `maxConcurrentRequests` option, it limits the number of HTTP requests that can be active simultaneously.
+If the number of requests per second is too high for a given set of sites/network requests may start to pile up, then specifying `maxConcurrentRequests`
+can help ensure that the network is not overloaded with piling up requests.
+
+##### Specifying both options
+
+It is possible to customize both options in case we are not sure how performant the network and sites are. Then `maxRequestsPerSecond` limits how many requests the crawler is allowed to make and `maxConcurrentRequests` allows to specify how should the crawler adjust its rate of requests depending on the real-time performance of the network/sites.
+
+```javascript
+var Crawler = require("js-crawler");
+
+var crawler = new Crawler().configure({
+  maxRequestsPerSecond: 10,
+  maxConcurrentRequests: 5
+});
+
+crawler.crawl({
+  url: "https://github.com",
+  success: function(page) {
+    console.log(page.url);
+  },
+  failure: function(page) {
+    console.log(page.status);
+  }
+});
+```
+
+##### Default option values
+
+By default the values are as follows:
+
+`maxRequestsPerSecond` 100
+`maxConcurrentRequests` 10
+
+That it we expect on average that 100 requests will be made every second and only 10 will be running concurrently, that is every request will take something like 100ms to complete.
+
 #### Forgetting crawled urls
 
 By default a crawler instance will remember all the urls it ever crawled and will not crawl them again. In order to make it forget all the crawled urls the method `forgetCrawled` can be used. There is another way to solve the same problem: create a new instance of a crawler.
@@ -136,7 +176,9 @@ The default value is `crawler/js-crawler`
 
 * `shouldCrawl` - function that specifies whether an url should be crawled, returns `true` or `false`.
 
-* `maxRequestsPerSecond` - the maximum number of HTTP requests per second that can be made by the crawler
+* `maxRequestsPerSecond` - the maximum number of HTTP requests per second that can be made by the crawler, default value is 100
+
+* `maxConcurrentRequests` - the maximum number of concurrent requests that should not be exceeded by the crawler, the default value is 10
 
 Example:
 
