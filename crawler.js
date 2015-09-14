@@ -66,7 +66,18 @@ Executor.prototype._processQueueItem = function() {
  * Main crawler functionality.
  */
 function Crawler() {
-  this.crawledUrls = {};
+
+  /*
+   * Urls that the Crawler has visited, as some pages may be in the middle of a redirect chain, not all the knownUrls will be actually
+   * reported in the onSuccess or onFailure callbacks, only the final urls in the corresponding redirect chains
+   */
+  this.knownUrls = {};
+
+  /*
+   * Urls that were reported in the onSuccess or onFailure callbacks. this.crawledUrls is a subset of this.knownUrls, and matches it
+   * iff there were no redirects while crawling.
+   */
+  this.crawledUrls = [];
   this.depth = DEFAULT_DEPTH;
   this.ignoreRelative = false;
   this.userAgent = DEFAULT_USERAGENT;
@@ -118,7 +129,8 @@ Crawler.prototype._startedCrawling = function(url) {
 };
 
 Crawler.prototype.forgetCrawled = function() {
-  this.crawledUrls = {};
+  this.knownUrls = {};
+  this.crawledUrls = [];
   return this;
 };
 
@@ -127,7 +139,7 @@ Crawler.prototype._finishedCrawling = function(url, onAllFinished) {
 
   this._currentUrlsToCrawl.splice(indexOfUrl, 1);
   if (this._currentUrlsToCrawl.length === 0) {
-    onAllFinished && onAllFinished(_.keys(this.crawledUrls));
+    onAllFinished && onAllFinished(this.crawledUrls);
     this.workExecutor && this.workExecutor.stop();
   }
 }
@@ -140,7 +152,7 @@ Crawler.prototype._requestUrl = function(options, callback) {
     request(options, callback);
   }, null, [options, callback], function shouldSkip() {
     var url = options.url;
-    var willSkip = _.contains(self.crawledUrls, url) || !self.shouldCrawl(url);
+    var willSkip = _.contains(self.knownUrls, url) || !self.shouldCrawl(url);
 
     if (willSkip && _.contains(self._currentUrlsToCrawl, url)) {
       self._finishedCrawling(url, onAllFinished);
@@ -150,7 +162,7 @@ Crawler.prototype._requestUrl = function(options, callback) {
 };
 
 Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFinished) {
-  if ((depth === 0) || this.crawledUrls[url]) {
+  if ((depth === 0) || this.knownUrls[url]) {
     return;
   }
   var self = this;
@@ -167,9 +179,9 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
       //If no redirects, then response.request.uri.href === url, otherwise last url
       var lastUrlInRedirectChain = response.request.uri.href;
       if (self.shouldCrawl(lastUrlInRedirectChain)) {
-        self.crawledUrls[url] = true;
+        self.knownUrls[url] = true;
         _.each(this.redirects, function(redirect) {
-          self.crawledUrls[redirect.redirectUri] = true;
+          self.knownUrls[redirect.redirectUri] = true;
         });
         onSuccess({
           url: url,
@@ -179,6 +191,7 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
           response: response,
           body: body
         });
+        self.crawledUrls.push(lastUrlInRedirectChain);
         if (depth > 1) {
           self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), depth - 1, onSuccess, onFailure, onAllFinished);
         }
@@ -191,6 +204,7 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
         response: response,
         body: body
       });
+      self.crawledUrls.push(url);
     }
     self._concurrentRequestNumber--;
     self._finishedCrawling(url, onAllFinished);
