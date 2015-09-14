@@ -3,6 +3,7 @@ var _ = require('underscore');
 var url = require('url');
 
 var DEFAULT_DEPTH = 2;
+var DEFAULT_MAX_CONCURRENT_REQUESTS = 10;
 var DEFAULT_MAX_REQUESTS_PER_SECOND = 100;
 var DEFAULT_USERAGENT = 'crawler/js-crawler';
 
@@ -12,6 +13,7 @@ var DEFAULT_USERAGENT = 'crawler/js-crawler';
 function Executor(opts) {
   this.maxRatePerSecond = opts.maxRatePerSecond;
   this.onFinished = opts.finished || function() {};
+  this.canProceed = opts.canProceed || function() {return true;};
   this.queue = [];
   this.isStopped = false;
   this.timeoutMs = (1 / this.maxRatePerSecond) * 1000;
@@ -37,17 +39,19 @@ Executor.prototype.stop = function() {
 Executor.prototype._processQueueItem = function() {
   var self = this;
 
-  if (this.queue.length !== 0) {
-    var nextExecution = this.queue.shift();
-    var shouldSkipNext = (nextExecution.shouldSkip && nextExecution.shouldSkip.call(nextExecution.context));
+  if (this.canProceed()) {
+    if (this.queue.length !== 0) {
+      var nextExecution = this.queue.shift();
+      var shouldSkipNext = (nextExecution.shouldSkip && nextExecution.shouldSkip.call(nextExecution.context));
 
-    if (shouldSkipNext) {
-      setTimeout(function() {
-        self._processQueueItem();
-      });
-      return;
-    } else {
-      nextExecution.func.apply(nextExecution.context, nextExecution.args);
+      if (shouldSkipNext) {
+        setTimeout(function() {
+          self._processQueueItem();
+        });
+        return;
+      } else {
+        nextExecution.func.apply(nextExecution.context, nextExecution.args);
+      }
     }
   }
   if (this.isStopped) {
@@ -66,11 +70,14 @@ function Crawler() {
   this.depth = DEFAULT_DEPTH;
   this.ignoreRelative = false;
   this.userAgent = DEFAULT_USERAGENT;
+  this.maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
   this.maxRequestsPerSecond = DEFAULT_MAX_REQUESTS_PER_SECOND;
-  this._beingCrawled = [];
   this.shouldCrawl = function() {
     return true;
   };
+  //Urls that are queued for crawling, for some of them HTTP requests may not yet have been issued
+  this._currentUrlsToCrawl = [];
+  this._concurrentRequestNumber = 0;
 }
 
 Crawler.prototype.configure = function(options) {
@@ -78,14 +85,22 @@ Crawler.prototype.configure = function(options) {
   this.depth = Math.max(this.depth, 0);
   this.ignoreRelative = (options && options.ignoreRelative) || this.ignoreRelative;
   this.userAgent = (options && options.userAgent) || this.userAgent;
+  this.maxConcurrentRequests = (options && options.maxConcurrentRequests) || this.maxConcurrentRequests;
   this.maxRequestsPerSecond = (options && options.maxRequestsPerSecond) || this.maxRequestsPerSecond;
   this.shouldCrawl = (options && options.shouldCrawl) || this.shouldCrawl;
   return this;
 };
 
 Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
+  var self = this;
+
   this.workExecutor = new Executor({
-    maxRatePerSecond: this.maxRequestsPerSecond
+    maxRatePerSecond: this.maxRequestsPerSecond,
+    canProceed: function() {
+      var shouldProceed = (self._concurrentRequestNumber < self.maxConcurrentRequests);
+
+      return shouldProceed;
+    }
   });
   this.workExecutor.start();
   if (!(typeof url === 'string')) {
@@ -99,7 +114,7 @@ Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
 };
 
 Crawler.prototype._startedCrawling = function(url) {
-  this._beingCrawled.push(url);
+  this._currentUrlsToCrawl.push(url);
 };
 
 Crawler.prototype.forgetCrawled = function() {
@@ -108,10 +123,10 @@ Crawler.prototype.forgetCrawled = function() {
 };
 
 Crawler.prototype._finishedCrawling = function(url, onAllFinished) {
-  var indexOfUrl = this._beingCrawled.indexOf(url);
+  var indexOfUrl = this._currentUrlsToCrawl.indexOf(url);
 
-  this._beingCrawled.splice(indexOfUrl, 1);
-  if (this._beingCrawled.length === 0) {
+  this._currentUrlsToCrawl.splice(indexOfUrl, 1);
+  if (this._currentUrlsToCrawl.length === 0) {
     onAllFinished && onAllFinished(_.keys(this.crawledUrls));
     this.workExecutor && this.workExecutor.stop();
   }
@@ -120,11 +135,14 @@ Crawler.prototype._finishedCrawling = function(url, onAllFinished) {
 Crawler.prototype._requestUrl = function(options, callback) {
   var self = this;
 
-  this.workExecutor.submit(request, null, [options, callback], function shouldSkip() {
+  this.workExecutor.submit(function(options, callback) {
+    self._concurrentRequestNumber++;
+    request(options, callback);
+  }, null, [options, callback], function shouldSkip() {
     var url = options.url;
     var willSkip = _.contains(self.crawledUrls, url) || !self.shouldCrawl(url);
 
-    if (willSkip && _.contains(self._beingCrawled, url)) {
+    if (willSkip && _.contains(self._currentUrlsToCrawl, url)) {
       self._finishedCrawling(url, onAllFinished);
     }
     return willSkip;
@@ -174,6 +192,7 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
         body: body
       });
     }
+    self._concurrentRequestNumber--;
     self._finishedCrawling(url, onAllFinished);
   });
 };

@@ -5,6 +5,7 @@ var crawledUrls = {};
 //Crawling only urls from the Yahoo site, max 5 per second
 new Crawler().configure({
   depth: 2,
+  maxConcurrentRequests: 5,
   maxRequestsPerSecond: 5,
   shouldCrawl: function(url) {
     var onMainYahooSite = !!url.match(/^https?:\/\/[^\/]*yahoo.com/);
