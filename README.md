@@ -151,9 +151,10 @@ crawler.crawl({
 By default the values are as follows:
 
 `maxRequestsPerSecond` 100
+
 `maxConcurrentRequests` 10
 
-That it we expect on average that 100 requests will be made every second and only 10 will be running concurrently, that is every request will take something like 100ms to complete.
+That is, we expect on average that 100 requests will be made every second and only 10 will be running concurrently, and every request will take something like 100ms to complete.
 
 #### Forgetting crawled urls
 
