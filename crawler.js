@@ -155,7 +155,7 @@ Crawler.prototype._requestUrl = function(options, callback) {
     var willSkip = _.contains(self.knownUrls, url) || !self.shouldCrawl(url);
 
     if (willSkip && _.contains(self._currentUrlsToCrawl, url)) {
-      self._finishedCrawling(url, onAllFinished);
+      self._finishedCrawling(url, callback);
     }
     return willSkip;
   });
