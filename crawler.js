@@ -99,6 +99,9 @@ Crawler.prototype.configure = function(options) {
   this.maxConcurrentRequests = (options && options.maxConcurrentRequests) || this.maxConcurrentRequests;
   this.maxRequestsPerSecond = (options && options.maxRequestsPerSecond) || this.maxRequestsPerSecond;
   this.shouldCrawl = (options && options.shouldCrawl) || this.shouldCrawl;
+  this.onSuccess = _.noop;
+  this.onFailure = _.noop;
+  this.onAllFinished = _.noop;
   return this;
 };
 
@@ -117,9 +120,15 @@ Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
   if (!(typeof url === 'string')) {
     var options = url;
 
-    this._crawlUrl(options.url, this.depth, options.success, options.failure, options.finished);
+    this.onSuccess = options.success;
+    this.onFailure = options.failure;
+    this.onAllFinished = options.finished;
+    this._crawlUrl(options.url, this.depth);
   } else {
-    this._crawlUrl(url, this.depth, onSuccess, onFailure, onAllFinished);
+    this.onSuccess = onSuccess;
+    this.onFailure = onFailure;
+    this.onAllFinished = onAllFinished;
+    this._crawlUrl(url, this.depth);
   }
   return this;
 };
@@ -134,12 +143,12 @@ Crawler.prototype.forgetCrawled = function() {
   return this;
 };
 
-Crawler.prototype._finishedCrawling = function(url, onAllFinished) {
+Crawler.prototype._finishedCrawling = function(url) {
   var indexOfUrl = this._currentUrlsToCrawl.indexOf(url);
 
   this._currentUrlsToCrawl.splice(indexOfUrl, 1);
   if (this._currentUrlsToCrawl.length === 0) {
-    onAllFinished && onAllFinished(this.crawledUrls);
+    this.onAllFinished && this.onAllFinished(this.crawledUrls);
     this.workExecutor && this.workExecutor.stop();
   }
 }
@@ -155,13 +164,13 @@ Crawler.prototype._requestUrl = function(options, callback) {
     var willSkip = _.contains(self.knownUrls, url) || !self.shouldCrawl(url);
 
     if (willSkip && _.contains(self._currentUrlsToCrawl, url)) {
-      self._finishedCrawling(url, callback);
+      self._finishedCrawling(url);
     }
     return willSkip;
   });
 };
 
-Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFinished) {
+Crawler.prototype._crawlUrl = function(url, depth) {
   if ((depth === 0) || this.knownUrls[url]) {
     return;
   }
@@ -183,7 +192,7 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
         _.each(this.redirects, function(redirect) {
           self.knownUrls[redirect.redirectUri] = true;
         });
-        onSuccess({
+        self.onSuccess({
           url: url,
           status: response.statusCode,
           content: body,
@@ -193,11 +202,11 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
         });
         self.crawledUrls.push(lastUrlInRedirectChain);
         if (depth > 1) {
-          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), depth - 1, onSuccess, onFailure, onAllFinished);
+          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), depth - 1);
         }
       }
-    } else if (onFailure) {
-      onFailure({
+    } else if (self.onFailure) {
+      self.onFailure({
         url: url,
         status: response ? response.statusCode : undefined,
         error: error,
@@ -207,7 +216,7 @@ Crawler.prototype._crawlUrl = function(url, depth, onSuccess, onFailure, onAllFi
       self.crawledUrls.push(url);
     }
     self._concurrentRequestNumber--;
-    self._finishedCrawling(url, onAllFinished);
+    self._finishedCrawling(url);
   });
 };
 
@@ -229,11 +238,11 @@ Crawler.prototype._getAllUrls = function(baseUrl, body) {
     .value();
 };
 
-Crawler.prototype._crawlUrls = function(urls, depth, onSuccess, onFailure, onAllFinished) {
+Crawler.prototype._crawlUrls = function(urls, depth) {
   var self = this;
 
   _.each(urls, function(url) {
-    self._crawlUrl(url, depth, onSuccess, onFailure, onAllFinished);
+    self._crawlUrl(url, depth);
   });
 };
 

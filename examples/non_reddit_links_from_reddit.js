@@ -3,12 +3,14 @@
  */
 var Crawler = require("../crawler.js");
 
+var topLevelUrl = "https://www.reddit.com/";
+
 var crawler = new Crawler().configure({
   shouldCrawl: function(url) {
-    return url.indexOf("reddit.com") < 0;
+    return (url.indexOf("reddit.com") < 0) || (topLevelUrl === url);
   }
 });
 
-crawler.crawl("http://www.reddit.com/r/javascript", function(page) {
+crawler.crawl(topLevelUrl, function(page) {
   console.log(page.url);
 });
