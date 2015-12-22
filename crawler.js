@@ -174,6 +174,9 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
   if ((depth === 0) || this.knownUrls[url]) {
     return;
   }
+
+  this.knownUrls[url] = true;
+
   var self = this;
 
   this._startedCrawling(url);
@@ -189,7 +192,6 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       //If no redirects, then response.request.uri.href === url, otherwise last url
       var lastUrlInRedirectChain = response.request.uri.href;
       if (self.shouldCrawl(lastUrlInRedirectChain)) {
-        self.knownUrls[url] = true;
         _.each(this.redirects, function(redirect) {
           self.knownUrls[redirect.redirectUri] = true;
         });
