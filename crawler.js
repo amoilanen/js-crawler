@@ -175,8 +175,6 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
     return;
   }
 
-  this.knownUrls[url] = true;
-
   var self = this;
 
   this._startedCrawling(url);
@@ -188,13 +186,14 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       'Referer': referer
     }
   }, function(error, response, body) {
+    self.knownUrls[url] = true;
+    _.each(this.redirects, function(redirect) {
+      self.knownUrls[redirect.redirectUri] = true;
+    });
     if (!error && (response.statusCode === 200)) {
       //If no redirects, then response.request.uri.href === url, otherwise last url
       var lastUrlInRedirectChain = response.request.uri.href;
       if (self.shouldCrawl(lastUrlInRedirectChain)) {
-        _.each(this.redirects, function(redirect) {
-          self.knownUrls[redirect.redirectUri] = true;
-        });
         self.onSuccess({
           url: url,
           status: response.statusCode,
