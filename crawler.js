@@ -123,12 +123,12 @@ Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
     this.onSuccess = options.success;
     this.onFailure = options.failure;
     this.onAllFinished = options.finished;
-    this._crawlUrl(options.url, this.depth);
+    this._crawlUrl(options.url, null, this.depth);
   } else {
     this.onSuccess = onSuccess;
     this.onFailure = onFailure;
     this.onAllFinished = onAllFinished;
-    this._crawlUrl(url, this.depth);
+    this._crawlUrl(url, null, this.depth);
   }
   return this;
 };
@@ -170,10 +170,13 @@ Crawler.prototype._requestUrl = function(options, callback) {
   });
 };
 
-Crawler.prototype._crawlUrl = function(url, depth) {
+Crawler.prototype._crawlUrl = function(url, referer, depth) {
   if ((depth === 0) || this.knownUrls[url]) {
     return;
   }
+
+  this.knownUrls[url] = true;
+
   var self = this;
 
   this._startedCrawling(url);
@@ -181,14 +184,14 @@ Crawler.prototype._crawlUrl = function(url, depth) {
     url: url,
     rejectUnauthorized : false,
     headers: {
-      'User-Agent': this.userAgent
+      'User-Agent': this.userAgent,
+      'Referer': referer
     }
   }, function(error, response, body) {
     if (!error && (response.statusCode === 200)) {
       //If no redirects, then response.request.uri.href === url, otherwise last url
       var lastUrlInRedirectChain = response.request.uri.href;
       if (self.shouldCrawl(lastUrlInRedirectChain)) {
-        self.knownUrls[url] = true;
         _.each(this.redirects, function(redirect) {
           self.knownUrls[redirect.redirectUri] = true;
         });
@@ -202,7 +205,7 @@ Crawler.prototype._crawlUrl = function(url, depth) {
         });
         self.crawledUrls.push(lastUrlInRedirectChain);
         if (depth > 1) {
-          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), depth - 1);
+          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), url, depth - 1);
         }
       }
     } else if (self.onFailure) {
@@ -238,11 +241,11 @@ Crawler.prototype._getAllUrls = function(baseUrl, body) {
     .value();
 };
 
-Crawler.prototype._crawlUrls = function(urls, depth) {
+Crawler.prototype._crawlUrls = function(urls, referer, depth) {
   var self = this;
 
   _.each(urls, function(url) {
-    self._crawlUrl(url, depth);
+    self._crawlUrl(url, referer, depth);
   });
 };
 
