@@ -180,6 +180,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
   this._startedCrawling(url);
   this._requestUrl({
     url: url,
+    encoding: null,				// Added by @tibetty so as to avoid request treating body as a string by default
     rejectUnauthorized : false,
     headers: {
       'User-Agent': this.userAgent,
@@ -203,8 +204,16 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
           body: body
         });
         self.crawledUrls.push(lastUrlInRedirectChain);
-        if (depth > 1) {
-          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), url, depth - 1);
+        /*
+        	Some minor changes made by @tibetty to:
+        	1. ensure further link analysis only make upon html content;
+        	2. convert binary buffer to properly an encoded string to facilitate analysis.
+        */
+        if (depth > 1 && response.headers['content-type'].match(/^text\/html.*$/)) {
+          var encoding = 'utf8';
+          if (response.headers['content-encoding']) encoding = response.headers['content-encoding'];
+          var encodedBody = body.toString(encoding);	
+          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, encodedBody), depth - 1);
         }
       }
     } else if (self.onFailure) {
