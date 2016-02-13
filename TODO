@@ -15,6 +15,10 @@ This should provide yet another sensible approach to limiting the bandwidth bein
 
 6. Re-factor the crawler, add unit tests and the build infrastructure
 
-7. Look at and test more the API for forgetting crawled urls
+7. Add end-to-end tests for the following cases:
+- Redirects
+- Binary content
 
-8. Better intuitive API for crawling several urls
+8. Look at and test more the API for forgetting crawled urls
+
+9. Better intuitive API for crawling several urls
