@@ -22,3 +22,7 @@ This should provide yet another sensible approach to limiting the bandwidth bein
 8. Look at and test more the API for forgetting crawled urls
 
 9. Better intuitive API for crawling several urls
+
+Technical:
+
+- ES6

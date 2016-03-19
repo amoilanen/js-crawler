@@ -231,9 +231,13 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
   });
 };
 
+Crawler.prototype._stripComments = function(str) {
+  return str.replace(/<!--.*?-->/g, '');
+};
+
 Crawler.prototype._getAllUrls = function(baseUrl, body) {
   var self = this;
-  body = body.replace(/<!--.*?-->/g, '');  // Added by @tibetty to omit commented contents which might mislead following link-parsing
+  body = this._stripComments(body);
   var linksRegex = self.ignoreRelative ? /<a[^>]+?href=".*?:\/\/.*?"/gmi : /<a[^>]+?href=".*?"/gmi;
   var links = body.match(linksRegex) || [];
 
