@@ -212,7 +212,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
         if (depth > 1 && response.headers['content-type'].match(/^text\/html.*$/)) {
           var encoding = 'utf8';
           if (response.headers['content-encoding']) encoding = response.headers['content-encoding'];
-          var encodedBody = body.toString(encoding);	
+          var encodedBody = body.toString(encoding);
           self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, encodedBody), depth - 1);
         }
       }

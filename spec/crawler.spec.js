@@ -26,4 +26,37 @@ describe('crawler', function() {
       );
     });
   });
+
+  describe('getting urls from fragment', function() {
+
+    var baseUrl = 'http://localhost:8080/basePath';
+
+    it('should get a relative url from fragment', function() {
+      expect(crawler._getAllUrls(baseUrl, '<a href="somePath/resource1"></a>'))
+        .toEqual(['http://localhost:8080/somePath/resource1']);
+    });
+
+    it('should get several urls from fragment', function() {
+      var fragment = '\
+Link a\
+<a href="a"></a>\
+Link b\
+<a href="b"></a>\
+Link c\
+<a href="c"></a>\
+';
+
+      expect(crawler._getAllUrls(baseUrl, fragment))
+        .toEqual([
+          'http://localhost:8080/a',
+          'http://localhost:8080/b',
+          'http://localhost:8080/c'
+        ]);
+    });
+
+    //should get absolute url from fragment
+    //ignoreRelative
+    //Links in the comments are omitted
+    //shouldCrawl
+  });
 });

@@ -9,7 +9,7 @@ module.exports = function(grunt) {
     karma: {
       options: {
         frameworks: ['jasmine', 'browserify'],
-        files: ['crawler.js', 'spec/crawler.spec.js'],
+        files: ['crawler.js', 'spec/*.spec.js'],
         browsers: ['PhantomJS'],
         singleRun: true,
         preprocessors: {

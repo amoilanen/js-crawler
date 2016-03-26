@@ -26,3 +26,5 @@ This should provide yet another sensible approach to limiting the bandwidth bein
 Technical:
 
 - ES6
+- Move sources under the src directory, then bundle during the build
+- Code coverage
