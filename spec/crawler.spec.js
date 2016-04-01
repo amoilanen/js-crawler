@@ -1,5 +1,12 @@
 var Crawler = require('../crawler');
 
+
+function getRecordedCallArguments(spyObj, methodName) {
+  return spyObj[methodName].calls.all().map(function(call) {
+    return call.args;
+  });
+}
+
 describe('crawler', function() {
 
   var crawler;
@@ -143,5 +150,22 @@ Link c\
     });
   });
 
-  //TODO: Tests for next function
+  describe('crawl all urls', function() {
+
+    var referer = 'referer';
+    var depth = 1;
+
+    it('should crawl all provided urls', function() {
+      spyOn(crawler, '_crawlUrl');
+      var urls = ['url1', 'url2', 'url3'];
+
+      crawler._crawlUrls(urls, referer, depth);
+
+      expect(getRecordedCallArguments(crawler, '_crawlUrl')).toEqual([
+        ['url1', referer, depth],
+        ['url2', referer, depth],
+        ['url3', referer, depth]
+      ]);
+    });
+  });
 });
