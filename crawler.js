@@ -241,14 +241,14 @@ Crawler.prototype._getAllUrls = function(baseUrl, body) {
   var linksRegex = self.ignoreRelative ? /<a[^>]+?href=".*?:\/\/.*?"/gmi : /<a[^>]+?href=".*?"/gmi;
   var links = body.match(linksRegex) || [];
 
-  links = _.map(links, function(link) {
-    var match = /href=\"(.*?)[#\"]/i.exec(link);
-
-    link = match[1];
-    link = url.resolve(baseUrl, link);
-    return link;
-  });
   return _.chain(links)
+    .map(function(link) {
+      var match = /href=\"(.*?)[#\"]/i.exec(link);
+
+      link = match[1];
+      link = url.resolve(baseUrl, link);
+      return link;
+    })
     .uniq()
     .filter(this.shouldCrawl)
     .value();
