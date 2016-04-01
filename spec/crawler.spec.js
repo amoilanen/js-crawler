@@ -54,9 +54,94 @@ Link c\
         ]);
     });
 
-    //should get absolute url from fragment
-    //ignoreRelative
-    //Links in the comments are omitted
-    //shouldCrawl
+    it('should get absolute url from fragment', function() {
+      expect(crawler._getAllUrls(baseUrl, '<a href="http://someotherhost/resource"></a>'))
+        .toEqual(['http://someotherhost/resource']);
+    });
+
+    describe('ignoreRelative option', function() {
+
+      describe('enabled', function() {
+
+        beforeEach(function() {
+          crawler.configure({
+            ignoreRelative: true
+          });
+        });
+
+        it('should ignore relative urls', function() {
+          expect(crawler._getAllUrls(baseUrl, '<a href="/resource"></a>'))
+            .toEqual([]);
+        });
+
+        it('should not ignore absolute urls', function() {
+          expect(crawler._getAllUrls(baseUrl, '<a href="http://localhost/resource"></a>'))
+            .toEqual(['http://localhost/resource']);
+        });
+      });
+
+      describe('disabled', function() {
+
+        beforeEach(function() {
+          crawler.configure({
+            ignoreRelative: false
+          });
+        });
+
+        it('should not ignore relative urls', function() {
+          expect(crawler._getAllUrls(baseUrl, '<a href="/resource"></a>'))
+            .toEqual(['http://localhost:8080/resource']);
+        });
+
+        it('should not ignore absolute urls', function() {
+          expect(crawler._getAllUrls(baseUrl, '<a href="http://localhost/resource"></a>'))
+            .toEqual(['http://localhost/resource']);
+        });
+      });
+    });
+
+    it('should ignore links in the comments', function() {
+      expect(crawler._getAllUrls(baseUrl, '<!--<a href="http://localhost/resource"></a>-->'))
+        .toEqual([]);
+    });
+
+    describe('shouldCrawl option', function() {
+
+      it('should filter urls based on shouldCrawl', function() {
+        crawler.configure({
+          shouldCrawl: function isOddResource(url) {
+            var resourceId = parseInt(url.substring(url.lastIndexOf('/') + 1));
+
+            return resourceId % 2 === 0;
+          }
+        });
+
+        var fragment = '<a href="/resource/1"></a>\
+<a href="/resource/2"></a>\
+<a href="/resource/3"></a>\
+<a href="/resource/4"></a>\
+<a href="/resource/5"></a>\
+';
+
+        expect(crawler._getAllUrls(baseUrl, fragment))
+          .toEqual([
+            'http://localhost:8080/resource/2',
+            'http://localhost:8080/resource/4'
+          ]);
+      });
+
+      it('should crawl everything if shouldCrawl is not a function', function() {
+        crawler.configure({
+          shouldCrawl: false
+        });
+
+        var fragment = '<a href="/resource/1"></a>';
+
+        expect(crawler._getAllUrls(baseUrl, fragment))
+          .toEqual(['http://localhost:8080/resource/1']);
+      });
+    });
   });
+
+  //TODO: Tests for next function
 });
