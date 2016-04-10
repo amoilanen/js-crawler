@@ -18,12 +18,14 @@ This should provide yet another sensible approach to limiting the bandwidth bein
 7. Add end-to-end tests for the following cases:
 - Redirects
 - Binary content
+- Several pages referencing each other (tree like structure)
+- Cycle: page 1 references page 2 and page 2 references page 1
 
 8. Look at and test more the API for forgetting crawled urls
 
 9. Better intuitive API for crawling several urls
 
-Technical:
+10. Technical:
 
 - ES6
 - Move sources under the src directory, then bundle during the build

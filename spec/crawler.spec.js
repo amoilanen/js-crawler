@@ -168,4 +168,30 @@ Link c\
       ]);
     });
   });
+
+  describe('crawl url', function() {
+
+    var referrer = 'someReferrer';
+    var url = 'someUrl';
+
+    beforeEach(function() {
+      crawler.workExecutor = jasmine.createSpyObj('executor', ['submit']);
+    });
+
+    it('should not crawl already known url again', function() {
+      crawler.knownUrls[url] = true;
+
+      crawler._crawlUrl(url, referrer, 1);
+
+      expect(crawler._currentUrlsToCrawl.length).toEqual(0);
+      expect(crawler.workExecutor.submit).not.toHaveBeenCalled();
+    });
+
+    it('should not crawl if reached maximum depth', function() {
+      crawler._crawlUrl(url, referrer, 0);
+
+      expect(crawler._currentUrlsToCrawl.length).toEqual(0);
+      expect(crawler.workExecutor.submit).not.toHaveBeenCalled();
+    });
+  });
 });
