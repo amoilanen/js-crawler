@@ -29,6 +29,7 @@ module.exports = function(grunt) {
       },
       unit_browser: {
         browsers: ['Firefox'],
+        reporters: ['kjhtml'],
         singleRun: false
       }
     }
