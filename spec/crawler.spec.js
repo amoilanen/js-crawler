@@ -171,27 +171,44 @@ Link c\
 
   describe('crawl url', function() {
 
-    var referrer = 'someReferrer';
+    var referer = 'someReferrer';
     var url = 'someUrl';
+    var userAgent = 'crawler/js-crawler';
 
     beforeEach(function() {
-      crawler.workExecutor = jasmine.createSpyObj('executor', ['submit']);
+      spyOn(crawler, '_requestUrl');
     });
 
     it('should not crawl already known url again', function() {
       crawler.knownUrls[url] = true;
 
-      crawler._crawlUrl(url, referrer, 1);
+      crawler._crawlUrl(url, referer, 1);
 
       expect(crawler._currentUrlsToCrawl.length).toEqual(0);
-      expect(crawler.workExecutor.submit).not.toHaveBeenCalled();
+      expect(crawler._requestUrl).not.toHaveBeenCalled();
     });
 
     it('should not crawl if reached maximum depth', function() {
-      crawler._crawlUrl(url, referrer, 0);
+      crawler._crawlUrl(url, referer, 0);
 
       expect(crawler._currentUrlsToCrawl.length).toEqual(0);
-      expect(crawler.workExecutor.submit).not.toHaveBeenCalled();
+      expect(crawler._requestUrl).not.toHaveBeenCalled();
+    });
+
+    it('should request url with correct options', function() {
+      var expectedOptions = {
+        url: url,
+        encoding: null,
+        rejectUnauthorized : false,
+        headers: {
+          'User-Agent': userAgent,
+          'Referer': referer
+        }
+      };
+
+      crawler._crawlUrl(url, referer, 1);
+
+      expect(crawler._requestUrl).toHaveBeenCalledWith(expectedOptions, jasmine.any(Function));
     });
   });
 });
