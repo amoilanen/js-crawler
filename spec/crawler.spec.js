@@ -225,6 +225,7 @@ Link c\
 
         beforeEach(function() {
           spyOn(crawler, 'onFailure');
+          spyOn(crawler, '_finishedCrawling');
           crawler._requestUrl.and.callFake(function(options, callback) {
             callback(error, errorResponse, errorBody);
           });
@@ -240,10 +241,20 @@ Link c\
             body: errorBody
           });
         });
+
+        it('should clean up internal fields keeing number of concurrent requests and urls to crawl', function() {
+          crawler._requestUrl.and.callFake(function(options, callback) {
+            expect(crawler._currentUrlsToCrawl).toEqual([url]);
+            callback(error, errorResponse, errorBody);
+            expect(crawler._currentUrlsToCrawl).toEqual([]);
+            expect(crawler._concurrentRequestNumber).toEqual(0);
+          });
+          crawler._crawlUrl(url, referer, 1);
+        });
       });
     });
 
-    //TODO: Failure occurred
+    //TODO: If no urls are left, the work executor is stopped
     //TODO: Redirects, all urls are added to known urls
   });
 });

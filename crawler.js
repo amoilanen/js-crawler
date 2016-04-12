@@ -158,7 +158,10 @@ Crawler.prototype._requestUrl = function(options, callback) {
 
   this.workExecutor.submit(function(options, callback) {
     self._concurrentRequestNumber++;
-    request(options, callback);
+    request(options, function(error, response, body) {
+      callback(error, response, body);
+      self._concurrentRequestNumber--;
+    });
   }, null, [options, callback], function shouldSkip() {
     var url = options.url;
     var willSkip = _.contains(self.knownUrls, url) || !self.shouldCrawl(url);
@@ -227,7 +230,6 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       });
       self.crawledUrls.push(url);
     }
-    self._concurrentRequestNumber--;
     self._finishedCrawling(url);
   });
 };
