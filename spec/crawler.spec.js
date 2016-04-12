@@ -13,6 +13,7 @@ describe('crawler', function() {
 
   beforeEach(function() {
     crawler = new Crawler();
+    crawler.configure();
   });
 
   describe('html comments', function() {
@@ -210,5 +211,39 @@ Link c\
 
       expect(crawler._requestUrl).toHaveBeenCalledWith(expectedOptions, jasmine.any(Function));
     });
+
+    describe('received response', function() {
+
+      var error = 'someError';
+      var errorStatusCode = 404;
+      var errorResponse = {
+        statusCode: errorStatusCode
+      };
+      var errorBody = 'Server error';
+
+      describe('error', function() {
+
+        beforeEach(function() {
+          spyOn(crawler, 'onFailure');
+          crawler._requestUrl.and.callFake(function(options, callback) {
+            callback(error, errorResponse, errorBody);
+          });
+          crawler._crawlUrl(url, referer, 1);
+        });
+
+        it('should handle error', function() {
+          expect(crawler.onFailure).toHaveBeenCalledWith({
+            url: url,
+            status: errorStatusCode,
+            error: error,
+            response: errorResponse,
+            body: errorBody
+          });
+        });
+      });
+    });
+
+    //TODO: Failure occurred
+    //TODO: Redirects, all urls are added to known urls
   });
 });
