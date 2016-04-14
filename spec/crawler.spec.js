@@ -214,6 +214,7 @@ Link c\
 
     describe('received response', function() {
 
+      var depth = 5;
       var error = 'someError';
       var errorStatusCode = 404;
       var errorResponse = {
@@ -229,7 +230,7 @@ Link c\
           crawler._requestUrl.and.callFake(function(options, callback) {
             callback(error, errorResponse, errorBody);
           });
-          crawler._crawlUrl(url, referer, 1);
+          crawler._crawlUrl(url, referer, depth);
         });
 
         it('should handle error', function() {
@@ -249,12 +250,79 @@ Link c\
             expect(crawler._currentUrlsToCrawl).toEqual([]);
             expect(crawler._concurrentRequestNumber).toEqual(0);
           });
-          crawler._crawlUrl(url, referer, 1);
+          crawler._crawlUrl(url, referer, depth);
         });
+      });
+
+      describe('crawling is successful', function() {
+        var OK = 200;
+        var response = null;
+        var body = 'Some next urls\
+<a href="url1"></a>\
+<a href="url2"></a>\
+<a href="url3"></a>';
+
+        beforeEach(function() {
+          response = {
+            statusCode: OK,
+            headers: {
+              'content-type': ''
+            },
+            request: {
+              uri: {
+                href: url
+              }
+            }
+          };
+          spyOn(crawler, 'onSuccess');
+          crawler._requestUrl.and.callFake(function(options, callback) {
+            callback(null, response, body);
+          });
+        });
+
+        it('should call onSuccess', function() {
+          crawler._crawlUrl(url, referer, depth);
+          expect(crawler.onSuccess).toHaveBeenCalledWith({
+            url: url,
+            status: OK,
+            content: body,
+            error: null,
+            response: response,
+            body: body
+          });
+        });
+
+        it('should add url to the list of known urls', function() {
+          expect(crawler.crawledUrls).toEqual([]);
+          crawler._crawlUrl(url, referer, depth);
+          expect(crawler.crawledUrls).toEqual([url]);
+        });
+
+        describe('content type', function() {
+
+          beforeEach(function() {
+            spyOn(crawler, '_crawlUrls');
+          });
+
+          it('should crawl urls from the body if text/html', function() {
+            response.headers['content-type'] = 'text/html';
+            crawler._crawlUrl(url, referer, depth);
+            expect(crawler._crawlUrls).toHaveBeenCalledWith(['url1', 'url2', 'url3'], url, depth - 1);
+          });
+
+          it('should stop crawling if binary', function() {
+            response.headers['content-type'] = 'application/javascript';
+            crawler._crawlUrl(url, referer, depth);
+            expect(crawler._crawlUrls).not.toHaveBeenCalled();
+          });
+        });
+
+        //TODO: If depth was 1 then no further crawling
+        //TODO: Body is decoded using the encoding from the response
+        //TODO: Redirects, all urls are added to known urls
       });
     });
 
     //TODO: If no urls are left, the work executor is stopped
-    //TODO: Redirects, all urls are added to known urls
   });
 });

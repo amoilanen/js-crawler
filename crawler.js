@@ -216,8 +216,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
           var encoding = 'utf8';
           if (response.headers['content-encoding']) encoding = response.headers['content-encoding'];
           var encodedBody = body.toString(encoding);
-          // dear @antivanov, see this null parameters newly added by me? It's an old bug in the original version - @tibetty
-          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, encodedBody), null, depth - 1);
+          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, encodedBody), lastUrlInRedirectChain, depth - 1);
         }
       }
     } else if (self.onFailure) {
