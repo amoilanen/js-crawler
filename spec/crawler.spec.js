@@ -315,9 +315,14 @@ Link c\
             crawler._crawlUrl(url, referer, depth);
             expect(crawler._crawlUrls).not.toHaveBeenCalled();
           });
+
+          it('should not crawl further if minimum depth reached', function() {
+            response.headers['content-type'] = 'text/html';
+            crawler._crawlUrl(url, referer, 1);
+            expect(crawler._crawlUrls).not.toHaveBeenCalled();
+          });
         });
 
-        //TODO: If depth was 1 then no further crawling
         //TODO: Body is decoded using the encoding from the response
         //TODO: Redirects, all urls are added to known urls
       });
