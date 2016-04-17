@@ -1,5 +1,5 @@
 var Crawler = require('../crawler');
-
+var _ = require('underscore');
 
 function getRecordedCallArguments(spyObj, methodName) {
   return spyObj[methodName].calls.all().map(function(call) {
@@ -278,6 +278,7 @@ Link c\
           crawler._requestUrl.and.callFake(function(options, callback) {
             callback(null, response, body);
           });
+          spyOn(crawler, '_crawlUrls');
         });
 
         it('should call onSuccess', function() {
@@ -300,10 +301,6 @@ Link c\
 
         describe('content type', function() {
 
-          beforeEach(function() {
-            spyOn(crawler, '_crawlUrls');
-          });
-
           it('should crawl urls from the body if text/html', function() {
             response.headers['content-type'] = 'text/html';
             crawler._crawlUrl(url, referer, depth);
@@ -323,11 +320,45 @@ Link c\
           });
         });
 
-        //TODO: Body is decoded using the encoding from the response
-        //TODO: Redirects, all urls are added to known urls
+        describe('content encoding', function() {
+
+          var decodedBody = 'Decoded body';
+
+          beforeEach(function() {
+            response.headers['content-type'] = 'text/html';
+            body = jasmine.createSpyObj('bodyBuffer', ['toString']);
+            body.toString.and.returnValue(decodedBody);
+          });
+
+          it('if no header provided, utf8 is used by default', function() {
+            crawler._crawlUrl(url, referer, depth);
+            expect(body.toString).toHaveBeenCalledWith('utf8');
+          });
+
+          it('if header provided, it is used', function() {
+            response.headers['content-encoding'] = 'gzip';
+            crawler._crawlUrl(url, referer, depth);
+            expect(body.toString).toHaveBeenCalledWith('gzip');
+          });
+        });
+
+        it('records all redirects that happened as known urls', function() {
+          crawler._requestUrl.and.callFake(function(options, callback) {
+            var context = {
+              redirects: [
+                {redirectUri: 'redirect1'},
+                {redirectUri: 'redirect2'},
+                {redirectUri: 'redirect3'}
+              ]
+            };
+            callback.call(context, null, response, body);
+          });
+          crawler._crawlUrl(url, referer, depth);
+          expect(_.chain(crawler.knownUrls).keys().sort().value()).toEqual(['redirect1', 'redirect2', 'redirect3', 'someUrl']);
+        });
       });
     });
-
-    //TODO: If no urls are left, the work executor is stopped
   });
+
+  //TODO: If no urls are left, the work executor is stopped
 });

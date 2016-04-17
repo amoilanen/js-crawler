@@ -206,6 +206,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
           response: response,
           body: body
         });
+        self.knownUrls[lastUrlInRedirectChain] = true;
         self.crawledUrls.push(lastUrlInRedirectChain);
         /*
         	Some minor changes made by @tibetty to:
