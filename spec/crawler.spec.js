@@ -360,5 +360,38 @@ Link c\
     });
   });
 
-  //TODO: If no urls are left, the work executor is stopped
+  describe('started/finished crawling', function() {
+
+    it('should remember the url being crawled', function() {
+      crawler._startedCrawling('url1');
+      expect(crawler._currentUrlsToCrawl).toEqual(['url1']);
+    });
+
+    it('should remove url from the list of urls being crawled', function() {
+      crawler._startedCrawling('url1');
+      crawler._startedCrawling('url2');
+      crawler._startedCrawling('url3');
+      crawler._finishedCrawling('url2');
+      expect(crawler._currentUrlsToCrawl).toEqual(['url1', 'url3']);
+    });
+
+    describe('all crawling finished', function() {
+
+      beforeEach(function() {
+        spyOn(crawler, 'onAllFinished');
+        crawler._startedCrawling('url1');
+        crawler.crawledUrls = ['url1'];
+        crawler.workExecutor = jasmine.createSpyObj('workExecutor', ['stop']);
+        crawler._finishedCrawling('url1');
+      });
+
+      it('should call onFinished with list of known urls', function() {
+        expect(crawler.onAllFinished).toHaveBeenCalledWith(['url1']);
+      });
+
+      it('should stop work executor', function() {
+        expect(crawler.workExecutor.stop).toHaveBeenCalled();
+      });
+    });
+  });
 });
