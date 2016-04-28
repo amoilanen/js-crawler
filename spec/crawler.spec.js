@@ -394,4 +394,26 @@ Link c\
       });
     });
   });
+
+  describe('_requestUrl', function() {
+
+    var url = 'url';
+
+    describe('shouldSkip argument', function() {
+
+      beforeEach(function() {
+        crawler.workExecutor = jasmine.createSpyObj('workExecutor', ['submit']);
+      });
+
+      it('should skip known url', function() {
+        crawler.workExecutor.submit.and.callFake(function(func, context, args, shouldSkip) {
+          crawler.knownUrls = [url];
+          expect(shouldSkip(url)).toBe(true);
+        });
+        crawler._requestUrl({
+          url: url
+        });
+      });
+    });
+  });
 });
