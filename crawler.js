@@ -133,14 +133,18 @@ Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
   return this;
 };
 
-Crawler.prototype._startedCrawling = function(url) {
-  this._currentUrlsToCrawl.push(url);
-};
-
+/*
+ * TODO: forgetCrawled, _startedCrawling, _finishedCrawling, _requestUrl belong together?
+ * Group them together?
+ */
 Crawler.prototype.forgetCrawled = function() {
   this.knownUrls = {};
   this.crawledUrls = [];
   return this;
+};
+
+Crawler.prototype._startedCrawling = function(url) {
+  this._currentUrlsToCrawl.push(url);
 };
 
 Crawler.prototype._finishedCrawling = function(url) {
@@ -155,21 +159,18 @@ Crawler.prototype._finishedCrawling = function(url) {
 
 Crawler.prototype._requestUrl = function(options, callback) {
   var self = this;
+  var url = options.url;
 
   this.workExecutor.submit(function(options, callback) {
+    self._startedCrawling(url);
     self._concurrentRequestNumber++;
     request(options, function(error, response, body) {
       callback(error, response, body);
+      self._finishedCrawling(url);
       self._concurrentRequestNumber--;
     });
   }, null, [options, callback], function shouldSkip() {
-    var url = options.url;
-    var willSkip = _.contains(self.knownUrls, url) || !self.shouldCrawl(url);
-
-    if (willSkip && _.contains(self._currentUrlsToCrawl, url)) {
-      self._finishedCrawling(url);
-    }
-    return willSkip;
+    return _.contains(self.knownUrls, url) || !self.shouldCrawl(url);
   });
 };
 
@@ -180,7 +181,6 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
 
   var self = this;
 
-  this._startedCrawling(url);
   this._requestUrl({
     url: url,
     encoding: null,				// Added by @tibetty so as to avoid request treating body as a string by default
@@ -230,7 +230,6 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       });
       self.crawledUrls.push(url);
     }
-    self._finishedCrawling(url);
   });
 };
 

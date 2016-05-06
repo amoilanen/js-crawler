@@ -403,11 +403,23 @@ Link c\
 
       beforeEach(function() {
         crawler.workExecutor = jasmine.createSpyObj('workExecutor', ['submit']);
+        spyOn(crawler, '_startedCrawling');
       });
 
       it('should skip known url', function() {
         crawler.workExecutor.submit.and.callFake(function(func, context, args, shouldSkip) {
           crawler.knownUrls = [url];
+          expect(shouldSkip(url)).toBe(true);
+        });
+        crawler._requestUrl({
+          url: url
+        });
+      });
+
+      it('should skip url if test function says so', function() {
+        spyOn(crawler, 'shouldCrawl');
+        crawler.shouldCrawl.and.returnValue(false);
+        crawler.workExecutor.submit.and.callFake(function(func, context, args, shouldSkip) {
           expect(shouldSkip(url)).toBe(true);
         });
         crawler._requestUrl({
