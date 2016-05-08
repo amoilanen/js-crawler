@@ -399,12 +399,13 @@ Link c\
 
     var url = 'url';
 
-    describe('shouldSkip argument', function() {
+    beforeEach(function() {
+      crawler.workExecutor = jasmine.createSpyObj('workExecutor', ['submit']);
+      spyOn(crawler, '_startedCrawling');
+      spyOn(crawler, '_finishedCrawling');
+    });
 
-      beforeEach(function() {
-        crawler.workExecutor = jasmine.createSpyObj('workExecutor', ['submit']);
-        spyOn(crawler, '_startedCrawling');
-      });
+    describe('shouldSkip argument', function() {
 
       it('should skip known url', function() {
         crawler.workExecutor.submit.and.callFake(function(func, context, args, shouldSkip) {
@@ -421,6 +422,32 @@ Link c\
         crawler.shouldCrawl.and.returnValue(false);
         crawler.workExecutor.submit.and.callFake(function(func, context, args, shouldSkip) {
           expect(shouldSkip(url)).toBe(true);
+        });
+        crawler._requestUrl({
+          url: url
+        });
+      });
+    });
+
+    describe('func argument', function() {
+
+      var options = 'func options';
+      var callback = _.noop;
+      var error = null;
+      var response = 'response';
+      var body = 'response body';
+
+      it('should increment and decrement concurrent request number, call on started and finished', function() {
+        crawler.workExecutor.submit.and.callFake(function(func, context, args, shouldSkip) {
+          func(options, callback);
+          crawler.request = function(options, callback) {
+            expect(crawler._startedCrawling).toHaveBeenCalledWith(url);
+            expect(crawler._concurrentRequestNumber).toBe(1);
+            //Callback code should call _finishedCrawling and decrement the counter of concurrent requests
+            callback(error, response, body);
+            expect(crawler._finishedCrawling).toHaveBeenCalledWith(url);
+            expect(crawler._concurrentRequestNumber).toBe(0);
+          };
         });
         crawler._requestUrl({
           url: url

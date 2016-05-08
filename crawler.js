@@ -89,6 +89,9 @@ function Crawler() {
   //Urls that are queued for crawling, for some of them HTTP requests may not yet have been issued
   this._currentUrlsToCrawl = [];
   this._concurrentRequestNumber = 0;
+
+  //Injecting request as a dependency for unit test support
+  this.request = request;
 }
 
 Crawler.prototype.configure = function(options) {
@@ -164,7 +167,7 @@ Crawler.prototype._requestUrl = function(options, callback) {
   this.workExecutor.submit(function(options, callback) {
     self._startedCrawling(url);
     self._concurrentRequestNumber++;
-    request(options, function(error, response, body) {
+    self.request(options, function(error, response, body) {
       callback(error, response, body);
       self._finishedCrawling(url);
       self._concurrentRequestNumber--;
