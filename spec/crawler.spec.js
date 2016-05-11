@@ -360,6 +360,21 @@ Link c\
     });
   });
 
+  describe('forget crawled', function() {
+
+    it('should forget crawled and known urls', function() {
+      crawler.knownUrls = {
+        'url1': true,
+        'url2': true,
+        'url3': true
+      };
+      crawler.crawledUrls = ['url1', 'url2', 'url3'];
+      crawler.forgetCrawled();
+      expect(crawler.knownUrls).toEqual({});
+      expect(crawler.crawledUrls).toEqual([]);
+    });
+  });
+
   describe('started/finished crawling', function() {
 
     it('should remember the url being crawled', function() {
