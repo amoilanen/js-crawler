@@ -124,19 +124,20 @@ Crawler.prototype._createExecutor = function() {
 Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
   this.workExecutor = this._createExecutor();
   this.workExecutor.start();
-  if (!(typeof url === 'string')) {
+
+  if (typeof url !== 'string') {
     var options = url;
 
-    this.onSuccess = options.success;
-    this.onFailure = options.failure;
-    this.onAllFinished = options.finished;
-    this._crawlUrl(options.url, null, this.depth);
-  } else {
-    this.onSuccess = onSuccess;
-    this.onFailure = onFailure;
-    this.onAllFinished = onAllFinished;
-    this._crawlUrl(url, null, this.depth);
+    onSuccess = options.success;
+    onFailure = options.failure;
+    onAllFinished = options.finished;
+    url = options.url;
   }
+  this.onSuccess = onSuccess;
+  this.onFailure = onFailure;
+  this.onAllFinished = onAllFinished;
+  this._crawlUrl(url, null, this.depth);
+
   return this;
 };
 
