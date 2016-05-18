@@ -108,10 +108,10 @@ Crawler.prototype.configure = function(options) {
   return this;
 };
 
-Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
+Crawler.prototype._createExecutor = function() {
   var self = this;
 
-  this.workExecutor = new Executor({
+  return new Executor({
     maxRatePerSecond: this.maxRequestsPerSecond,
     canProceed: function() {
       var shouldProceed = (self._concurrentRequestNumber < self.maxConcurrentRequests);
@@ -119,6 +119,10 @@ Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
       return shouldProceed;
     }
   });
+}
+
+Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
+  this.workExecutor = this._createExecutor();
   this.workExecutor.start();
   if (!(typeof url === 'string')) {
     var options = url;

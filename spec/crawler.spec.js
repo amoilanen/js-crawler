@@ -470,4 +470,78 @@ Link c\
       });
     });
   });
+
+  describe('crawl', function() {
+
+    var url = 'url';
+    var depth = 3;
+    var onSuccess = function() {};
+    var onFailure = function() {};
+    var onAllFinished = function() {};
+    var workExecutor;
+
+    beforeEach(function() {
+      spyOn(crawler, '_crawlUrl');
+      spyOn(crawler, '_createExecutor');
+      workExecutor = jasmine.createSpyObj('executor', ['start']);
+      crawler._createExecutor.and.returnValue(workExecutor);
+      crawler.depth = depth;
+      crawler.workExecutor = null;
+    });
+
+    describe('arguments', function() {
+
+      beforeEach(function() {
+        crawler.crawl(url, onSuccess, onFailure, onAllFinished);
+      });
+
+      it('should initialize callbacks', function() {
+        expect(crawler.onSuccess).toEqual(onSuccess);
+        expect(crawler.onFailure).toEqual(onFailure);
+        expect(crawler.onAllFinished).toEqual(onAllFinished);
+      });
+
+      it('should start crawling', function() {
+        expect(crawler._crawlUrl).toHaveBeenCalledWith(url, null, depth);
+      });
+
+      it('should initialize workExecutor', function() {
+        expect(crawler.workExecutor).not.toBeNull();
+      });
+
+      it('should start executor', function() {
+        expect(crawler.workExecutor.start.calls.count()).toEqual(1);
+      });
+    });
+
+    describe('options', function() {
+
+      beforeEach(function() {
+        crawler.crawl({
+          url: url,
+          success: onSuccess,
+          failure: onFailure,
+          finished: onAllFinished
+        });
+      });
+
+      it('should initialize callbacks', function() {
+        expect(crawler.onSuccess).toEqual(onSuccess);
+        expect(crawler.onFailure).toEqual(onFailure);
+        expect(crawler.onAllFinished).toEqual(onAllFinished);
+      });
+
+      it('should start crawling', function() {
+        expect(crawler._crawlUrl).toHaveBeenCalledWith(url, null, depth);
+      });
+
+      it('should initialize workExecutor', function() {
+        expect(crawler.workExecutor).not.toBeNull();
+      });
+
+      it('should start executor', function() {
+        expect(crawler.workExecutor.start.calls.count()).toEqual(1);
+      });
+    });
+  });
 });
