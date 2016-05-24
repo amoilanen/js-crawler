@@ -578,4 +578,60 @@ Link c\
       });
     });
   });
+
+  describe('configure', function() {
+
+    var options = {
+      depth: 10,
+      ignoreRelative: true,
+      userAgent: 'userAgent',
+      maxConcurrentRequests: 10,
+      maxRequestsPerSecond: 5
+    };
+    var defaultOptions = {
+      depth: 2,
+      ignoreRelative: false,
+      userAgent: 'crawler/js-crawler',
+      maxConcurrentRequests: 10,
+      maxRequestsPerSecond: 100
+    };
+
+    function pick(obj, properties) {
+      var projection = {};
+
+      return properties.reduce(function(acc, property) {
+        acc[property] = obj[property];
+        return acc;
+      }, {});
+    }
+
+    describe('options provided', function() {
+
+      it('should use provided options', function() {
+        crawler.configure(options);
+
+        expect(pick(crawler, Object.keys(options))).toEqual(options);
+      });
+    });
+
+    describe('no options provided', function() {
+
+      it('should use default options', function() {
+        expect(pick(crawler, Object.keys(options))).toEqual(defaultOptions);
+      });
+    });
+
+    it('should initialize callbacks to noop functions', function() {
+      expect(crawler.onSuccess).not.toBeNull();
+      expect(crawler.onFailure).not.toBeNull();
+      expect(crawler.onAllFinished).not.toBeNull();
+    });
+
+    it('should set depth to zero if negative depth provided', function() {
+      crawler.configure({
+        depth: -5
+      });
+      expect(crawler.depth).toEqual(0);
+    });
+  });
 });

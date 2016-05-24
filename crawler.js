@@ -117,7 +117,7 @@ Crawler.prototype._createExecutor = function() {
       return self._concurrentRequestNumber < self.maxConcurrentRequests;
     }
   });
-}
+};
 
 Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
   this.workExecutor = this._createExecutor();
