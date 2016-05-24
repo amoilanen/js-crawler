@@ -544,4 +544,38 @@ Link c\
       });
     });
   });
+
+  describe('create executor', function() {
+
+    var maxRequestsPerSecond = 5;
+    var maxConcurrentRequests = 10;
+    var executor;
+
+    beforeEach(function() {
+      crawler.maxRequestsPerSecond = maxRequestsPerSecond;
+      crawler.maxConcurrentRequests = maxConcurrentRequests;
+      executor = crawler._createExecutor();
+    });
+
+    it('creates executor', function() {
+      expect(executor).not.toBeNull();
+    });
+
+    it('sets maximum number of requests per second', function() {
+      expect(executor.maxRatePerSecond).toEqual(maxRequestsPerSecond);
+    });
+
+    describe('can proceed function', function() {
+
+      it('maximum number of concurrent requests is low', function() {
+        crawler._concurrentRequestNumber = crawler.maxConcurrentRequests - 1;
+        expect(executor.canProceed()).toBe(true);
+      });
+
+      it('maximum number of concurrent requests is too high', function() {
+        crawler._concurrentRequestNumber = crawler.maxConcurrentRequests + 1;
+        expect(executor.canProceed()).toBe(false);
+      });
+    });
+  });
 });

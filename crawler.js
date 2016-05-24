@@ -114,9 +114,7 @@ Crawler.prototype._createExecutor = function() {
   return new Executor({
     maxRatePerSecond: this.maxRequestsPerSecond,
     canProceed: function() {
-      var shouldProceed = (self._concurrentRequestNumber < self.maxConcurrentRequests);
-
-      return shouldProceed;
+      return self._concurrentRequestNumber < self.maxConcurrentRequests;
     }
   });
 }
