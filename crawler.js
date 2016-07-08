@@ -150,7 +150,9 @@ Crawler.prototype.forgetCrawled = function() {
 };
 
 Crawler.prototype._startedCrawling = function(url) {
-  this._currentUrlsToCrawl.push(url);
+  if (this._currentUrlsToCrawl.indexOf(url) < 0) {
+    this._currentUrlsToCrawl.push(url);
+  }
 };
 
 Crawler.prototype._finishedCrawling = function(url) {
@@ -164,11 +166,17 @@ Crawler.prototype._finishedCrawling = function(url) {
 }
 
 Crawler.prototype._requestUrl = function(options, callback) {
+  //console.log('_requestUrl: options = ', options);
   var self = this;
   var url = options.url;
 
+  //Do not request a url if it has already been crawled
+  if (_.contains(self._currentUrlsToCrawl, url) || _.contains(self.knownUrls, url)) {
+    return;
+  }
+
+  self._startedCrawling(url);
   this.workExecutor.submit(function(options, callback) {
-    self._startedCrawling(url);
     self._concurrentRequestNumber++;
     self.request(options, function(error, response, body) {
       callback(error, response, body);
@@ -176,11 +184,13 @@ Crawler.prototype._requestUrl = function(options, callback) {
       self._concurrentRequestNumber--;
     });
   }, null, [options, callback], function shouldSkip() {
+    //console.log('Should skip? url = ', url, _.contains(self.knownUrls, url) || !self.shouldCrawl(url));
     return _.contains(self.knownUrls, url) || !self.shouldCrawl(url);
   });
 };
 
 Crawler.prototype._crawlUrl = function(url, referer, depth) {
+  //console.log('_crawlUrl: url = %s, depth = %s', url, depth);
   if ((depth === 0) || this.knownUrls[url]) {
     return;
   }
@@ -196,6 +206,10 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       'Referer': referer
     }
   }, function(error, response, body) {
+    if (self.knownUrls[url]) {
+      //Was already crawled while the request has been processed, no need to call callbacks
+      return;
+    }
     self.knownUrls[url] = true;
     _.each(this.redirects, function(redirect) {
       self.knownUrls[redirect.redirectUri] = true;
@@ -203,6 +217,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
     if (!error && (response.statusCode === 200)) {
       //If no redirects, then response.request.uri.href === url, otherwise last url
       var lastUrlInRedirectChain = response.request.uri.href;
+      //console.log('lastUrlInRedirectChain = %s', lastUrlInRedirectChain);
       if (self.shouldCrawl(lastUrlInRedirectChain)) {
         self.onSuccess({
           url: url,
