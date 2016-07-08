@@ -199,6 +199,51 @@ crawler.crawl("http://www.reddit.com/r/javascript", function(page) {
 
 Default value is a function that always returns `true`.
 
+#### Development
+
+Install dependencies
+
+`npm install`
+
+Running the build
+
+`grunt`
+
+##### Unit tests
+
+`grunt karma:unit`
+
+launches unit tests in the console mode
+
+`grunt karma:unit_browser`
+
+launches a browser in which unit tests can be debugged
+
+##### End-to-end tests
+
+`jasmine-node` and `express` are used to setup and run end-to-end tests
+
+Install jasmine-node and express globablly
+
+```
+npm install -g jasmine-node
+npm install -g express
+```
+
+Start the end-to-end target server
+
+```
+cd e2e
+node server.js
+```
+
+Now the server runs on the port 3000.
+Run the end-to-end specs:
+
+```
+jasmine-node e2e/
+```
+
 ## License
 
 MIT License
