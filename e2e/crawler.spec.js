@@ -35,6 +35,39 @@ describe('crawler', function() {
         }
       );
     });
-
   });
+
+  describe('redirects', () => {
+
+    it('should crawl all urls in redirect chain and do not crawl them again', (done) => {
+      var crawledUrls = [];
+      var expectedUrls = [
+        'http://localhost:3000/redirectend'
+      ];
+      var expectedKnownUrls = [
+        'http://localhost:3000/redirect1',
+        'http://localhost:3000/redirect2',
+        'http://localhost:3000/redirect3',
+        'http://localhost:3000/redirectend'
+      ];
+
+      crawler.crawl('http://localhost:3000/redirect1',
+        function onSuccess(page) {
+          crawledUrls.push(page.url);
+        },
+        function onFailure() {
+          expect('Errors while crawling').to.be('');
+        },
+        function onAllFinished(crawledUrls) {
+          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          expect(Object.keys(crawler.knownUrls).sort()).toEqual(expectedKnownUrls.sort());
+          done();
+        }
+      );
+    });
+  });
+
+  //Redirect with another HTTP code? 301?
+  //Cycles
+  //Binary content
 });
