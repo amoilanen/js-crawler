@@ -67,7 +67,10 @@ describe('crawler', function() {
     });
   });
 
-  //Redirect with another HTTP code? 301?
-  //Cycles
-  //Binary content
+  //TODO: Redirect with another HTTP code? 301?
+  //TODO: Cycles
+  //TODO: Binary content
+  //TODO: Test for throughput limitation
+  //TODO: Test for depth limitation
+  //TODO: Test for crawling 1000 links (generate them in server.js)
 });

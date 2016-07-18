@@ -179,6 +179,7 @@ Crawler.prototype._requestUrl = function(options, callback) {
   this.workExecutor.submit(function(options, callback) {
     self._concurrentRequestNumber++;
     self.request(options, function(error, response, body) {
+      self.redirects = this._redirect.redirects;
       callback(error, response, body);
       self._finishedCrawling(url);
       self._concurrentRequestNumber--;
@@ -201,6 +202,8 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
     url: url,
     encoding: null,				// Added by @tibetty so as to avoid request treating body as a string by default
     rejectUnauthorized : false,
+    followRedirect: true,
+    followAllRedirects: true,
     headers: {
       'User-Agent': this.userAgent,
       'Referer': referer
@@ -211,7 +214,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       return;
     }
     self.knownUrls[url] = true;
-    _.each(this.redirects, function(redirect) {
+    _.each(self.redirects, function(redirect) {
       self.knownUrls[redirect.redirectUri] = true;
     });
     if (!error && (response.statusCode === 200)) {
@@ -264,7 +267,8 @@ Crawler.prototype._getAllUrls = function(baseUrl, body) {
   var linksRegex = self.ignoreRelative ? /<a[^>]+?href=".*?:\/\/.*?"/gmi : /<a[^>]+?href=".*?"/gmi;
   var links = body.match(linksRegex) || [];
 
-  return _.chain(links)
+  //console.log('body = ', body);
+  var urls = _.chain(links)
     .map(function(link) {
       var match = /href=\"(.*?)[#\"]/i.exec(link);
 
@@ -275,6 +279,9 @@ Crawler.prototype._getAllUrls = function(baseUrl, body) {
     .uniq()
     .filter(this.shouldCrawl)
     .value();
+
+  //console.log('urls to crawl = ', urls);
+  return urls;
 };
 
 Crawler.prototype._crawlUrls = function(urls, referer, depth) {

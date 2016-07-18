@@ -1,6 +1,6 @@
 {
   "name": "js-crawler",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "description": "Web crawler for Node.js",
   "main": "crawler.js",
   "directories": {
