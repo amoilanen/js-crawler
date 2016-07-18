@@ -201,6 +201,8 @@ Link c\
         url: url,
         encoding: null,
         rejectUnauthorized : false,
+        followRedirect: true,
+        followAllRedirects: true,
         headers: {
           'User-Agent': userAgent,
           'Referer': referer
@@ -344,14 +346,12 @@ Link c\
 
         it('records all redirects that happened as known urls', function() {
           crawler._requestUrl.and.callFake(function(options, callback) {
-            var context = {
-              redirects: [
-                {redirectUri: 'redirect1'},
-                {redirectUri: 'redirect2'},
-                {redirectUri: 'redirect3'}
-              ]
-            };
-            callback.call(context, null, response, body);
+            crawler._redirects = [
+              {redirectUri: 'redirect1'},
+              {redirectUri: 'redirect2'},
+              {redirectUri: 'redirect3'}
+            ];
+            callback(null, response, body);
           });
           crawler._crawlUrl(url, referer, depth);
           expect(_.chain(crawler.knownUrls).keys().sort().value()).toEqual(['redirect1', 'redirect2', 'redirect3', 'someUrl']);

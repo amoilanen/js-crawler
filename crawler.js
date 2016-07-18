@@ -179,7 +179,7 @@ Crawler.prototype._requestUrl = function(options, callback) {
   this.workExecutor.submit(function(options, callback) {
     self._concurrentRequestNumber++;
     self.request(options, function(error, response, body) {
-      self.redirects = this._redirect.redirects;
+      self._redirects = this._redirect.redirects;
       callback(error, response, body);
       self._finishedCrawling(url);
       self._concurrentRequestNumber--;
@@ -214,7 +214,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       return;
     }
     self.knownUrls[url] = true;
-    _.each(self.redirects, function(redirect) {
+    _.each(self._redirects, function(redirect) {
       self.knownUrls[redirect.redirectUri] = true;
     });
     if (!error && (response.statusCode === 200)) {
