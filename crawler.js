@@ -208,7 +208,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       'User-Agent': this.userAgent,
       'Referer': referer
     }
-  }, function(error, response, body) {
+  }, function(error, response) {
     if (self.knownUrls[url]) {
       //Was already crawled while the request has been processed, no need to call callbacks
       return;
@@ -217,6 +217,9 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
     _.each(self._redirects, function(redirect) {
       self.knownUrls[redirect.redirectUri] = true;
     });
+    var isTextContent = self._isTextContent(response);
+    var body = isTextContent ? self._getDecodedBody(response) : '<<...binary content (omitted by js-crawler)...>>';
+
     if (!error && (response.statusCode === 200)) {
       //If no redirects, then response.request.uri.href === url, otherwise last url
       var lastUrlInRedirectChain = response.request.uri.href;
@@ -232,22 +235,15 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
         });
         self.knownUrls[lastUrlInRedirectChain] = true;
         self.crawledUrls.push(lastUrlInRedirectChain);
-        /*
-        	Some minor changes made by @tibetty to:
-        	1. ensure further link analysis only make upon html content;
-        	2. convert binary buffer to properly an encoded string to facilitate analysis.
-        */
-        if (depth > 1 && response.headers['content-type'].match(/^text\/html.*$/)) {
-          var encoding = 'utf8';
-          if (response.headers['content-encoding']) encoding = response.headers['content-encoding'];
-          var encodedBody = body.toString(encoding);
-          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, encodedBody), lastUrlInRedirectChain, depth - 1);
+        if (depth > 1 && isTextContent) {
+          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), lastUrlInRedirectChain, depth - 1);
         }
       }
     } else if (self.onFailure) {
       self.onFailure({
         url: url,
         status: response ? response.statusCode : undefined,
+        content: body,
         error: error,
         response: response,
         body: body
@@ -255,6 +251,19 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       self.crawledUrls.push(url);
     }
   });
+};
+
+Crawler.prototype._isTextContent = function(response) {
+  return response.headers['content-type'].match(/^text\/html.*$/)
+};
+
+Crawler.prototype._getDecodedBody = function(response, body) {
+  var encoding = 'utf8';
+
+  if (response.headers['content-encoding']) {
+    encoding = response.headers['content-encoding'];
+  }
+  return response.body.toString(encoding);
 };
 
 Crawler.prototype._stripComments = function(str) {
