@@ -67,6 +67,31 @@ describe('crawler', function() {
     });
   });
 
+  describe('simple cycle', () => {
+
+    it('should crawl all urls in a cycle only once', (done) => {
+      var crawledUrls = [];
+      var expectedUrls = [
+        'http://localhost:3000/simple_cycle/page1.html',
+        'http://localhost:3000/simple_cycle/page2.html',
+        'http://localhost:3000/simple_cycle/page3.html'
+      ];
+
+      crawler.crawl('http://localhost:3000/simple_cycle/page1.html',
+        function onSuccess(page) {
+          crawledUrls.push(page.url);
+        },
+        function onFailure() {
+          expect('Errors while crawling').to.be('');
+        },
+        function onAllFinished(crawledUrls) {
+          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          done();
+        }
+      );
+    });
+  });
+
   //TODO: Redirect with another HTTP code? 301?
   //TODO: Cycles
   //TODO: Binary content
