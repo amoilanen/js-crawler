@@ -254,7 +254,8 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
 };
 
 Crawler.prototype._isTextContent = function(response) {
-  return response.headers['content-type'].match(/^text\/html.*$/)
+  return response.headers && response.headers['content-type']
+      && response.headers['content-type'].match(/^text\/html.*$/);
 };
 
 Crawler.prototype._getDecodedBody = function(response, body) {

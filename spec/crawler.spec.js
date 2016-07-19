@@ -219,10 +219,12 @@ Link c\
       var depth = 5;
       var error = 'someError';
       var errorStatusCode = 404;
-      var errorResponse = {
-        statusCode: errorStatusCode
-      };
       var errorBody = 'Server error';
+      var errorResponse = {
+        headers: {'content-type': 'text/html'},
+        statusCode: errorStatusCode,
+        body: errorBody
+      };
 
       describe('error', function() {
 
@@ -239,6 +241,7 @@ Link c\
           expect(crawler.onFailure).toHaveBeenCalledWith({
             url: url,
             status: errorStatusCode,
+            content: errorBody,
             error: error,
             response: errorResponse,
             body: errorBody
@@ -268,13 +271,14 @@ Link c\
           response = {
             statusCode: OK,
             headers: {
-              'content-type': ''
+              'content-type': 'text/html'
             },
             request: {
               uri: {
                 href: url
               }
-            }
+            },
+            body: body
           };
           spyOn(crawler, 'onSuccess');
           crawler._requestUrl.and.callFake(function(options, callback) {
@@ -328,19 +332,19 @@ Link c\
 
           beforeEach(function() {
             response.headers['content-type'] = 'text/html';
-            body = jasmine.createSpyObj('bodyBuffer', ['toString']);
-            body.toString.and.returnValue(decodedBody);
+            response.body = jasmine.createSpyObj('bodyBuffer', ['toString']);
+            response.body.toString.and.returnValue(decodedBody);
           });
 
           it('if no header provided, utf8 is used by default', function() {
             crawler._crawlUrl(url, referer, depth);
-            expect(body.toString).toHaveBeenCalledWith('utf8');
+            expect(response.body.toString).toHaveBeenCalledWith('utf8');
           });
 
           it('if header provided, it is used', function() {
             response.headers['content-encoding'] = 'gzip';
             crawler._crawlUrl(url, referer, depth);
-            expect(body.toString).toHaveBeenCalledWith('gzip');
+            expect(response.body.toString).toHaveBeenCalledWith('gzip');
           });
         });
 
