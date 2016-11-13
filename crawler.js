@@ -271,9 +271,25 @@ Crawler.prototype._stripComments = function(str) {
   return str.replace(/<!--.*?-->/g, '');
 };
 
-Crawler.prototype._getAllUrls = function(baseUrl, body) {
+Crawler.prototype._getBaseUrl = function(defaultBaseUrl, body) {
+
+  /*
+   * Resolving the base url following
+   * the algorithm from https://www.w3.org/TR/html5/document-metadata.html#the-base-element
+   */
+  var baseUrlRegex = /<base href="(.*?)">/;
+  var baseUrlInPage = body.match(baseUrlRegex);
+  if (!baseUrlInPage) {
+    return defaultBaseUrl;
+  }
+
+  return url.resolve(defaultBaseUrl, baseUrlInPage[1]);
+};
+
+Crawler.prototype._getAllUrls = function(defaultBaseUrl, body) {
   var self = this;
   body = this._stripComments(body);
+  var baseUrl = this._getBaseUrl(defaultBaseUrl, body);
   var linksRegex = self.ignoreRelative ? /<a[^>]+?href=".*?:\/\/.*?"/gmi : /<a[^>]+?href=".*?"/gmi;
   var links = body.match(linksRegex) || [];
 

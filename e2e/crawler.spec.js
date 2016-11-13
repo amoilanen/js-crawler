@@ -128,6 +128,47 @@ describe('crawler', function() {
     });
   });
 
+  describe('base tag', () => {
+
+    it('should use base url as the base for relative urls', (done) => {
+      var crawledUrls = [];
+      var expectedUrls = [
+        'http://localhost:3000/base_tag/index/page1.html',
+        'http://localhost:3000/base_tag/page2.html'
+      ];
+
+      crawler.crawl({
+        url: 'http://localhost:3000/base_tag/index/page1.html',
+        success: function(page) {
+          crawledUrls.push(page.url);
+        },
+        finished: function(crawledUrls) {
+          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          done();
+        }
+      });
+    });
+
+    it('should resolve relative base url', (done) => {
+      var crawledUrls = [];
+      var expectedUrls = [
+        'http://localhost:3000/base_tag/index/page1relativebase.html',
+        'http://localhost:3000/base_tag/index/relative_base_tag/page3.html'
+      ];
+
+      crawler.crawl({
+        url: 'http://localhost:3000/base_tag/index/page1relativebase.html',
+        success: function(page) {
+          crawledUrls.push(page.url);
+        },
+        finished: function(crawledUrls) {
+          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          done();
+        }
+      });
+    });
+  });
+
   //TODO: Redirect with another HTTP code? 301?
   //TODO: Binary content, links are not analyzed in binary content, binary content itself is not returned (as it can be too large)(?)
   //TODO: Test for throughput limitation

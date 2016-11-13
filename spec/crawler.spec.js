@@ -149,6 +149,47 @@ Link c\
           .toEqual(['http://localhost:8080/resource/1']);
       });
     });
+
+    describe('base url specified in HTML', () => {
+
+      var defaultBaseUrl = 'http://localhost:8080/defaultbase/';
+      var specifiedAbsoluteBaseUrl = 'http://localhost:8080/specifiedabsolutebase/';
+      var specifiedRelativeBaseUrl = 'specifiedrelativebase/';
+
+      it('should resolve relative urls using base url', function() {
+        var fragment = '<base href="' +specifiedAbsoluteBaseUrl + '">\
+<a href="resource/1"></a>\
+<a href="resource/2"></a>\
+<a href="resource/3"></a>';
+
+        expect(crawler._getAllUrls(defaultBaseUrl, fragment))
+          .toEqual([
+            'http://localhost:8080/specifiedabsolutebase/resource/1',
+            'http://localhost:8080/specifiedabsolutebase/resource/2',
+            'http://localhost:8080/specifiedabsolutebase/resource/3'
+          ]);
+      });
+
+      it('should resolve absolute urls to themselves', function() {
+        var fragment = '<base href="' +specifiedAbsoluteBaseUrl + '">\
+<a href="/resource/1"></a>';
+
+        expect(crawler._getAllUrls(defaultBaseUrl, fragment))
+          .toEqual([
+            'http://localhost:8080/resource/1'
+          ]);
+      });
+
+      it('should resolve relative urls with relative base url specified', function() {
+        var fragment = '<base href="' +specifiedRelativeBaseUrl + '">\
+<a href="resource/1"></a>';
+
+        expect(crawler._getAllUrls(defaultBaseUrl, fragment))
+          .toEqual([
+            'http://localhost:8080/defaultbase/specifiedrelativebase/resource/1'
+          ]);
+      });
+    });
   });
 
   describe('crawl all urls', function() {
