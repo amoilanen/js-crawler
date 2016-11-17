@@ -254,7 +254,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
 };
 
 Crawler.prototype._isTextContent = function(response) {
-  return response.headers && response.headers['content-type']
+  return response && response.headers && response.headers['content-type']
       && response.headers['content-type'].match(/^text\/html.*$/);
 };
 
@@ -286,6 +286,11 @@ Crawler.prototype._getBaseUrl = function(defaultBaseUrl, body) {
   return url.resolve(defaultBaseUrl, baseUrlInPage[1]);
 };
 
+Crawler.prototype._isLinkProtocolSupported = function(link) {
+  return (link.indexOf('://') < 0 && link.indexOf('mailto:') < 0)
+    || link.indexOf('http://') >= 0 || link.indexOf('https://') >= 0;
+};
+
 Crawler.prototype._getAllUrls = function(defaultBaseUrl, body) {
   var self = this;
   body = this._stripComments(body);
@@ -303,7 +308,9 @@ Crawler.prototype._getAllUrls = function(defaultBaseUrl, body) {
       return link;
     })
     .uniq()
-    .filter(this.shouldCrawl)
+    .filter(function(link) {
+      return self._isLinkProtocolSupported(link) && self.shouldCrawl(link);
+     })
     .value();
 
   //console.log('urls to crawl = ', urls);

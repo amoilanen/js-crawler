@@ -169,6 +169,33 @@ describe('crawler', function() {
     });
   });
 
+  describe('references contain links to non-http resources', () => {
+
+    it('should ignore mailto link', (done) => {
+      var crawledUrls = [];
+      var expectedUrls = [
+        'http://localhost:3000/non_http_https_links/page1.html',
+        'http://localhost:3000/non_http_https_links/page2.html'
+      ];
+
+      crawler.crawl({
+        url: 'http://localhost:3000/non_http_https_links/page1.html',
+        success: function(page) {
+          crawledUrls.push(page.url);
+        },
+        failure: function(error) {
+          console.log(error);
+          expect('Error while crawling').toEqual('');
+          done();
+        },
+        finished: function(crawledUrls) {
+          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          done();
+        }
+      });
+    });
+  });
+
   //TODO: Redirect with another HTTP code? 301?
   //TODO: Binary content, links are not analyzed in binary content, binary content itself is not returned (as it can be too large)(?)
   //TODO: Test for throughput limitation
