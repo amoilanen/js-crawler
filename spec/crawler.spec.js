@@ -67,6 +67,16 @@ Link c\
         .toEqual(['http://someotherhost/resource']);
     });
 
+    it('should ignore mailto links', function() {
+      expect(crawler._getAllUrls(baseUrl, '<a href="mailto:someone@somewhere.com"></a>'))
+        .toEqual([]);
+    });
+
+    it('should ignore ftp links', function() {
+      expect(crawler._getAllUrls(baseUrl, '<a href="ftp://myserver.org"></a>'))
+        .toEqual([]);
+    });
+
     describe('ignoreRelative option', function() {
 
       describe('enabled', function() {
@@ -386,6 +396,10 @@ Link c\
             response.headers['content-encoding'] = 'gzip';
             crawler._crawlUrl(url, referer, depth);
             expect(response.body.toString).toHaveBeenCalledWith('gzip');
+          });
+
+          it('if response is not defined, content is not considered to be text', function() {
+            expect(crawler._isTextContent()).toBe(false);
           });
         });
 
