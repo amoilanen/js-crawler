@@ -1,5 +1,7 @@
 Possible enhancements:
 
+0. Enable debugging, when crawler is passed debug: true option log information about crawled urls, content etc.?
+
 1. It should be possible to limit the number of requests not only by the number of requests per second but also
 by the number of concurrent active requests, i.e. maxConcurrentRequests: 5
 

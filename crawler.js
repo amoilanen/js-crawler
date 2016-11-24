@@ -217,6 +217,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
     _.each(self._redirects, function(redirect) {
       self.knownUrls[redirect.redirectUri] = true;
     });
+    //console.log('analyzing url = ', url);
     var isTextContent = self._isTextContent(response);
     var body = isTextContent ? self._getDecodedBody(response) : '<<...binary content (omitted by js-crawler)...>>';
 
@@ -258,13 +259,21 @@ Crawler.prototype._isTextContent = function(response) {
       && response.headers['content-type'].match(/^text\/html.*$/));
 };
 
-Crawler.prototype._getDecodedBody = function(response, body) {
-  var encoding = 'utf8';
+Crawler.prototype._getDecodedBody = function(response) {
+  var defaultEncoding = 'utf8';
+  var encoding = defaultEncoding;
 
   if (response.headers['content-encoding']) {
     encoding = response.headers['content-encoding'];
   }
-  return response.body.toString(encoding);
+  //console.log('encoding = "' + encoding + '"');
+  var decodedBody;
+  try {
+    decodedBody = response.body.toString(encoding);
+  } catch (decodingError) {
+    decodedBody = response.body.toString(defaultEncoding);
+  }
+  return decodedBody;
 };
 
 Crawler.prototype._stripComments = function(str) {

@@ -401,6 +401,17 @@ Link c\
           it('if response is not defined, content is not considered to be text', function() {
             expect(crawler._isTextContent()).toBe(false);
           });
+
+          it('if invalid encoding is specified, default encoding will be used', function() {
+            response.body.toString.and.callFake(function(encoding) {
+              if (encoding !== 'utf8') {
+                throw new Error('Unknown encoding ' + encoding);
+              }
+              return decodedBody;
+            });
+            response.headers['content-encoding'] = 'none';
+            expect(crawler._getDecodedBody(response)).toEqual(decodedBody);
+          });
         });
 
         it('records all redirects that happened as known urls', function() {
