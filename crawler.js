@@ -86,6 +86,9 @@ function Crawler() {
   this.shouldCrawl = function() {
     return true;
   };
+  this.shouldCheck = function() {
+    return true;
+  };
   //Urls that are queued for crawling, for some of them HTTP requests may not yet have been issued
   this._currentUrlsToCrawl = [];
   this._concurrentRequestNumber = 0;
@@ -102,6 +105,7 @@ Crawler.prototype.configure = function(options) {
   this.maxConcurrentRequests = (options && options.maxConcurrentRequests) || this.maxConcurrentRequests;
   this.maxRequestsPerSecond = (options && options.maxRequestsPerSecond) || this.maxRequestsPerSecond;
   this.shouldCrawl = (options && options.shouldCrawl) || this.shouldCrawl;
+  this.shouldCheck = (options && options.shouldCheck) || this.shouldCheck;
   this.onSuccess = _.noop;
   this.onFailure = _.noop;
   this.onAllFinished = _.noop;
@@ -186,7 +190,7 @@ Crawler.prototype._requestUrl = function(options, callback) {
     });
   }, null, [options, callback], function shouldSkip() {
     //console.log('Should skip? url = ', url, _.contains(self.knownUrls, url) || !self.shouldCrawl(url));
-    return _.contains(self.knownUrls, url) || !self.shouldCrawl(url);
+    return _.contains(self.knownUrls, url) || !self.shouldCheck(url);
   });
 };
 
@@ -225,22 +229,21 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       //If no redirects, then response.request.uri.href === url, otherwise last url
       var lastUrlInRedirectChain = response.request.uri.href;
       //console.log('lastUrlInRedirectChain = %s', lastUrlInRedirectChain);
-      if (self.shouldCrawl(lastUrlInRedirectChain)) {
-        self.onSuccess({
-          url: url,
-          status: response.statusCode,
-          content: body,
-          error: error,
-          response: response,
-          body: body,
-          referer: referer || ""
-        });
-        self.knownUrls[lastUrlInRedirectChain] = true;
-        self.crawledUrls.push(lastUrlInRedirectChain);
-        if (depth > 1 && isTextContent) {
-          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), lastUrlInRedirectChain, depth - 1);
-        }
+      self.onSuccess({
+        url: url,
+        status: response.statusCode,
+        content: body,
+        error: error,
+        response: response,
+        body: body,
+        referer: referer || ""
+      });
+      self.knownUrls[lastUrlInRedirectChain] = true;
+      self.crawledUrls.push(lastUrlInRedirectChain);
+      if (self.shouldCrawl(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
+        self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), lastUrlInRedirectChain, depth - 1);
       }
+      
     } else if (self.onFailure) {
       self.onFailure({
         url: url,
@@ -320,7 +323,7 @@ Crawler.prototype._getAllUrls = function(defaultBaseUrl, body) {
     })
     .uniq()
     .filter(function(link) {
-      return self._isLinkProtocolSupported(link) && self.shouldCrawl(link);
+      return self._isLinkProtocolSupported(link) && self.shouldCheck(link);
      })
     .value();
 
