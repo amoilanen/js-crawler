@@ -232,7 +232,8 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
           content: body,
           error: error,
           response: response,
-          body: body
+          body: body,
+          referer: referer || ""
         });
         self.knownUrls[lastUrlInRedirectChain] = true;
         self.crawledUrls.push(lastUrlInRedirectChain);
@@ -247,7 +248,8 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
         content: body,
         error: error,
         response: response,
-        body: body
+        body: body,
+        referer: referer || ""
       });
       self.crawledUrls.push(url);
     }
