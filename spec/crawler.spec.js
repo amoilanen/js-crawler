@@ -76,6 +76,11 @@ Link c\
       expect(crawler._getAllUrls(baseUrl, '<a href="ftp://myserver.org"></a>'))
         .toEqual([]);
     });
+    
+    it('should work with single or double quoted attribute values', function() {
+      expect(crawler._getAllUrls(baseUrl, '<a href="http://doublequoted.org"></a>'+"<a href='http://singlequoted.org'></a>"))
+        .toEqual(['http://doublequoted.org/','http://singlequoted.org/']);
+    });
 
     describe('ignoreRelative option', function() {
 
@@ -160,7 +165,7 @@ Link c\
       });
     });
 
-    describe('base url specified in HTML', () => {
+    describe('base url specified in HTML', function() {
 
       var defaultBaseUrl = 'http://localhost:8080/defaultbase/';
       var specifiedAbsoluteBaseUrl = 'http://localhost:8080/specifiedabsolutebase/';
@@ -222,8 +227,7 @@ Link c\
   });
 
   describe('crawl url', function() {
-
-    var referer = 'someReferrer';
+    var referer = 'someReferer';
     var url = 'someUrl';
     var userAgent = 'crawler/js-crawler';
 
@@ -295,7 +299,8 @@ Link c\
             content: errorBody,
             error: error,
             response: errorResponse,
-            body: errorBody
+            body: errorBody,
+            referer: referer
           });
         });
 
@@ -346,7 +351,8 @@ Link c\
             content: body,
             error: null,
             response: response,
-            body: body
+            body: body,
+            referer: referer
           });
         });
 

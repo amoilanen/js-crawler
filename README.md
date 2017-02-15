@@ -31,6 +31,7 @@ The call to `configure` is optional, if it is omitted the default option values 
 * `status` - the HTTP status code
 
 Extra information can be retrieved from the rest of the `page` fields: `error`, `response`, `body` which are identical to the ones passed to the callback of `request` invocation of the [Request](https://github.com/mikeal/request) module.
+`referer` field will reference the url of the page that lead the crawler to the current page.
 
 #### Options-based API
 
@@ -69,6 +70,7 @@ new Crawler().configure({depth: 3})
     console.log("ERROR occurred:");
     console.log(response.status);
     console.log(response.url);
+    console.log(response.referer);
   });
 ```
 
