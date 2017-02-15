@@ -86,7 +86,7 @@ function Crawler() {
   this.shouldCrawl = function() {
     return true;
   };
-  this.shouldCheck = function() {
+  this.shouldSpider = function() {
     return true;
   };
   //Urls that are queued for crawling, for some of them HTTP requests may not yet have been issued
@@ -105,7 +105,7 @@ Crawler.prototype.configure = function(options) {
   this.maxConcurrentRequests = (options && options.maxConcurrentRequests) || this.maxConcurrentRequests;
   this.maxRequestsPerSecond = (options && options.maxRequestsPerSecond) || this.maxRequestsPerSecond;
   this.shouldCrawl = (options && options.shouldCrawl) || this.shouldCrawl;
-  this.shouldCheck = (options && options.shouldCheck) || this.shouldCheck;
+  this.shouldSpider = (options && options.shouldSpider) || this.shouldSpider;
   this.onSuccess = _.noop;
   this.onFailure = _.noop;
   this.onAllFinished = _.noop;
@@ -190,7 +190,7 @@ Crawler.prototype._requestUrl = function(options, callback) {
     });
   }, null, [options, callback], function shouldSkip() {
     //console.log('Should skip? url = ', url, _.contains(self.knownUrls, url) || !self.shouldCrawl(url));
-    return _.contains(self.knownUrls, url) || !self.shouldCheck(url);
+    return _.contains(self.knownUrls, url) || !self.shouldCrawl(url);
   });
 };
 
@@ -240,7 +240,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       });
       self.knownUrls[lastUrlInRedirectChain] = true;
       self.crawledUrls.push(lastUrlInRedirectChain);
-      if (self.shouldCrawl(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
+      if (self.shouldSpider(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
         self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), lastUrlInRedirectChain, depth - 1);
       }
       
@@ -323,7 +323,7 @@ Crawler.prototype._getAllUrls = function(defaultBaseUrl, body) {
     })
     .uniq()
     .filter(function(link) {
-      return self._isLinkProtocolSupported(link) && self.shouldCheck(link);
+      return self._isLinkProtocolSupported(link) && self.shouldCrawl(link);
      })
     .value();
 
