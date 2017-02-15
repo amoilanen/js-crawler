@@ -175,14 +175,22 @@ The default value is `false`.
 
 The default value is `crawler/js-crawler`
 
-* `shouldCrawl` - function that specifies whether an url should be crawled, returns `true` or `false`.
-
 * `maxRequestsPerSecond` - the maximum number of HTTP requests per second that can be made by the crawler, default value is 100
 
 * `maxConcurrentRequests` - the maximum number of concurrent requests that should not be exceeded by the crawler, the default value is 10
 
-Example:
+* `shouldCrawl` - function that specifies whether a url should be crawled/requested, returns `true` or `false`.
 
+* `shouldSpider` - function that specifies whether the spider should crawl a URL for additional links, returns `true` or `false`.
+
+Note: `shouldCrawl` determines if a given URL should be requested/visited at all, where as `shouldSpider` determines if the links on a given URL should be harvested/added to the crawling queue. 
+Many users may find that setting `shouldCrawl` is sufficient, as URLs cannot be spidered if they are never visited/requested.
+A common use case for having these functions separated: if a user would like to check external links on a site for errors, without crawling those external links, the user could create a `shouldSpider` function that restricts spidering to the original URL.
+
+
+**Examples:**
+
+The following will crawl the specified URL, but not allow external URLs to be visited/requested, and therefore not search for additional links to crawl on the external URLs:
 ```javascript
 var Crawler = require("js-crawler");
 
@@ -197,7 +205,22 @@ crawler.crawl("http://www.reddit.com/r/javascript", function(page) {
 });
 ```
 
-Default value is a function that always returns `true`.
+The following will crawl the specified URL, allow external URLs to be visited/requested, but will not search for additional links to crawl on the external URLs:
+```javascript
+var Crawler = require("js-crawler");
+
+var crawler = new Crawler().configure({
+  shouldSpider: function(url) {
+    return url.indexOf("reddit.com") < 0;
+  }
+});
+
+crawler.crawl("http://www.reddit.com/r/javascript", function(page) {
+  console.log(page.url);
+});
+```
+
+The default value for each is a function that always returns `true`.
 
 #### Development
 
