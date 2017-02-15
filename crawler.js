@@ -306,13 +306,13 @@ Crawler.prototype._getAllUrls = function(defaultBaseUrl, body) {
   var self = this;
   body = this._stripComments(body);
   var baseUrl = this._getBaseUrl(defaultBaseUrl, body);
-  var linksRegex = self.ignoreRelative ? /<a[^>]+?href=".*?:\/\/.*?"/gmi : /<a[^>]+?href=".*?"/gmi;
+  var linksRegex = self.ignoreRelative ? /<a[^>]+?href=["'].*?:\/\/.*?["']/gmi : /<a[^>]+?href=["'].*?["']/gmi;
   var links = body.match(linksRegex) || [];
 
   //console.log('body = ', body);
   var urls = _.chain(links)
     .map(function(link) {
-      var match = /href=\"(.*?)[#\"]/i.exec(link);
+      var match = /href=[\"\'](.*?)[#\"\']/i.exec(link);
 
       link = match[1];
       link = url.resolve(baseUrl, link);

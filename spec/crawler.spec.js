@@ -76,6 +76,11 @@ Link c\
       expect(crawler._getAllUrls(baseUrl, '<a href="ftp://myserver.org"></a>'))
         .toEqual([]);
     });
+    
+    it('should work with single or double quoted attribute values', function() {
+      expect(crawler._getAllUrls(baseUrl, '<a href="http://doublequoted.org"></a>'+"<a href='http://singlequoted.org'></a>"))
+        .toEqual(['http://doublequoted.org/','http://singlequoted.org/']);
+    });
 
     describe('ignoreRelative option', function() {
 
