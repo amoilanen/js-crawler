@@ -432,6 +432,21 @@ Link c\
           crawler._crawlUrl(url, referer, depth);
           expect(_.chain(crawler.knownUrls).keys().sort().value()).toEqual(['redirect1', 'redirect2', 'redirect3', 'someUrl']);
         });
+
+
+        describe('url should not be crawled according to shouldCrawl', function() {
+
+          beforeEach(function() {
+            crawler.shouldCrawl = function(urlToCrawl) {
+              return urlToCrawl != url;
+            };
+          });
+
+          it('should not call onSuccess', function() {
+            crawler._crawlUrl(url, referer, depth);
+            expect(crawler.onSuccess).not.toHaveBeenCalled();
+          });
+        });
       });
     });
   });
