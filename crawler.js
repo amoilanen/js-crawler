@@ -83,10 +83,10 @@ function Crawler() {
   this.userAgent = DEFAULT_USERAGENT;
   this.maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
   this.maxRequestsPerSecond = DEFAULT_MAX_REQUESTS_PER_SECOND;
-  this.shouldCrawl = function() {
+  this.shouldCrawl = function(url) {
     return true;
   };
-  this.shouldSpider = function() {
+  this.shouldCrawlLinksFrom = function(url) {
     return true;
   };
   //Urls that are queued for crawling, for some of them HTTP requests may not yet have been issued
@@ -105,7 +105,7 @@ Crawler.prototype.configure = function(options) {
   this.maxConcurrentRequests = (options && options.maxConcurrentRequests) || this.maxConcurrentRequests;
   this.maxRequestsPerSecond = (options && options.maxRequestsPerSecond) || this.maxRequestsPerSecond;
   this.shouldCrawl = (options && options.shouldCrawl) || this.shouldCrawl;
-  this.shouldSpider = (options && options.shouldSpider) || this.shouldSpider;
+  this.shouldCrawlLinksFrom = (options && options.shouldCrawlLinksFrom) || this.shouldCrawlLinksFrom;
   this.onSuccess = _.noop;
   this.onFailure = _.noop;
   this.onAllFinished = _.noop;
@@ -241,7 +241,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
         });
         self.knownUrls[lastUrlInRedirectChain] = true;
         self.crawledUrls.push(lastUrlInRedirectChain);
-        if (self.shouldSpider(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
+        if (self.shouldCrawlLinksFrom(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
           self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), lastUrlInRedirectChain, depth - 1);
         }
       }

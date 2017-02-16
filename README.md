@@ -181,9 +181,10 @@ The default value is `crawler/js-crawler`
 
 * `maxConcurrentRequests` - the maximum number of concurrent requests that should not be exceeded by the crawler, the default value is 10
 
-* `shouldCrawl` - function that specifies whether a url should be crawled/requested, returns `true` or `false`.
+* `shouldCrawl` - function that specifies whether a url should be crawled/requested, returns `true` or `false`,
+argument is the current `url` the crawler considers for crawling
 
-* `shouldSpider` - function that specifies whether the spider should crawl a URL for additional links, returns `true` or `false`.
+* `shouldCrawlLinksFrom` - function that specifies whether the crawler should crawl links found at a given url, returns `true` or `false`, argument is the current `url` being crawled
 
 Note: `shouldCrawl` determines if a given URL should be requested/visited at all, where as `shouldSpider` determines if the links on a given URL should be harvested/added to the crawling queue. 
 Many users may find that setting `shouldCrawl` is sufficient, as URLs cannot be spidered if they are never visited/requested.
@@ -212,7 +213,7 @@ The following will crawl the specified URL, allow external URLs to be visited/re
 var Crawler = require("js-crawler");
 
 var crawler = new Crawler().configure({
-  shouldSpider: function(url) {
+  shouldCrawlLinksFrom: function(url) {
     return url.indexOf("reddit.com") < 0;
   }
 });
