@@ -197,6 +197,9 @@ describe('crawler', function() {
   });
 
   //TODO: Test for the correct referer value in a chain of visited pages
+  //TODO: Test for the shouldCrawlLinksFrom function
+  //TODO: Test for shouldCrawl
+
   //TODO: Redirect with another HTTP code? 301?
   //TODO: Binary content, links are not analyzed in binary content, binary content itself is not returned (as it can be too large)(?)
   //TODO: Test for throughput limitation

@@ -434,17 +434,73 @@ Link c\
         });
 
 
-        describe('url should not be crawled according to shouldCrawl', function() {
+        describe('shouldCrawl', function() {
 
-          beforeEach(function() {
-            crawler.shouldCrawl = function(urlToCrawl) {
-              return urlToCrawl != url;
-            };
+          describe('should not crawl url', function() {
+
+            beforeEach(function() {
+              crawler.shouldCrawl = function(urlToCrawl) {
+                return urlToCrawl != url;
+              };
+            });
+
+            it('should not call onSuccess', function() {
+              crawler._crawlUrl(url, referer, depth);
+              expect(crawler.onSuccess).not.toHaveBeenCalled();
+            });
           });
 
-          it('should not call onSuccess', function() {
-            crawler._crawlUrl(url, referer, depth);
-            expect(crawler.onSuccess).not.toHaveBeenCalled();
+          describe('should crawl url', function() {
+
+            beforeEach(function() {
+              crawler.shouldCrawl = function(urlToCrawl) {
+                return urlToCrawl == url;
+              };
+            });
+
+            it('should not call onSuccess', function() {
+              crawler._crawlUrl(url, referer, depth);
+              expect(crawler.onSuccess).toHaveBeenCalledWith({
+                url: url,
+                status: OK,
+                content: body,
+                error: null,
+                response: response,
+                body: body,
+                referer: referer
+              });
+            });
+          });
+        });
+
+        describe('shouldCrawlLinksFrom', function() {
+
+          describe('should not crawl links from url', function() {
+
+            beforeEach(function() {
+              crawler.shouldCrawlLinksFrom = function(urlToCrawl) {
+                return urlToCrawl != url;
+              };
+            });
+
+            it('should not call _crawlUrls', function() {
+              crawler._crawlUrl(url, referer, depth);
+              expect(crawler._crawlUrls).not.toHaveBeenCalled();
+            });
+          });
+
+          describe('should crawl links from url', function() {
+
+            beforeEach(function() {
+              crawler.shouldCrawlLinksFrom = function(urlToCrawl) {
+                return urlToCrawl == url;
+              };
+            });
+
+            it('should call _crawlUrls with the correct list of urls', function() {
+              crawler._crawlUrl(url, referer, depth);
+              expect(crawler._crawlUrls).toHaveBeenCalledWith(['url1', 'url2', 'url3'], url, depth - 1);
+            });
           });
         });
       });
