@@ -229,19 +229,21 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       //If no redirects, then response.request.uri.href === url, otherwise last url
       var lastUrlInRedirectChain = response.request.uri.href;
       //console.log('lastUrlInRedirectChain = %s', lastUrlInRedirectChain);
-      self.onSuccess({
-        url: url,
-        status: response.statusCode,
-        content: body,
-        error: error,
-        response: response,
-        body: body,
-        referer: referer || ""
-      });
-      self.knownUrls[lastUrlInRedirectChain] = true;
-      self.crawledUrls.push(lastUrlInRedirectChain);
-      if (self.shouldSpider(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
-        self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), lastUrlInRedirectChain, depth - 1);
+      if (self.shouldCrawl(lastUrlInRedirectChain)) {
+        self.onSuccess({
+          url: url,
+          status: response.statusCode,
+          content: body,
+          error: error,
+          response: response,
+          body: body,
+          referer: referer || ""
+        });
+        self.knownUrls[lastUrlInRedirectChain] = true;
+        self.crawledUrls.push(lastUrlInRedirectChain);
+        if (self.shouldSpider(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
+          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), lastUrlInRedirectChain, depth - 1);
+        }
       }
     } else if (self.onFailure) {
       self.onFailure({
