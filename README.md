@@ -158,9 +158,9 @@ By default the values are as follows:
 
 That is, we expect on average that 100 requests will be made every second and only 10 will be running concurrently, and every request will take something like 100ms to complete.
 
-#### Forgetting crawled urls
+#### Reusing the same crawler instance for repeated crawling: forgetting crawled urls
 
-By default a crawler instance will remember all the urls it ever crawled and will not crawl them again. In order to make it forget all the crawled urls the method `forgetCrawled` can be used. There is another way to solve the same problem: create a new instance of a crawler.
+By default a crawler instance will remember all the urls it ever crawled and will not crawl them again. In order to make it forget all the crawled urls the method `forgetCrawled` can be used. There is another way to solve the same problem: create a new instance of a crawler. Example https://github.com/antivanov/js-crawler/blob/master/examples/github_forgetting_crawled_urls.js
 
 #### Supported options
 
@@ -186,9 +186,7 @@ argument is the current `url` the crawler considers for crawling
 
 * `shouldCrawlLinksFrom` - function that specifies whether the crawler should crawl links found at a given url, returns `true` or `false`, argument is the current `url` being crawled
 
-Note: `shouldCrawl` determines if a given URL should be requested/visited at all, where as `shouldSpider` determines if the links on a given URL should be harvested/added to the crawling queue. 
-Many users may find that setting `shouldCrawl` is sufficient, as URLs cannot be spidered if they are never visited/requested.
-A common use case for having these functions separated: if a user would like to check external links on a site for errors, without crawling those external links, the user could create a `shouldSpider` function that restricts spidering to the original URL.
+Note: `shouldCrawl` determines if a given URL should be requested/visited at all, where as `shouldCrawlLinksFrom` determines if the links on a given URL should be harvested/added to the crawling queue. Many users may find that using `shouldCrawl` is sufficient, as links from a page cannot be crawled if the page is never visited/requested in the first place. A common use case for having these functions separated: if a user would like to check external links on a site for errors without crawling those external links, the user could create a `shouldCrawlLinksFrom` function that restricts crawling to the original url without visiting external links.
 
 
 **Examples:**
