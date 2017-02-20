@@ -196,6 +196,53 @@ describe('crawler', function() {
     });
   });
 
+  describe('shouldCrawl', () => {
+
+    it('should call onAllFinished when last url should not be crawled', (done) => {
+      var expectedUrls = [
+        'http://localhost:3000/simple_cycle/page1.html',
+        'http://localhost:3000/simple_cycle/page2.html'
+      ];
+
+      crawler.configure({
+        shouldCrawl: function(url) {
+          //Omit page3.html
+          return url.indexOf('page3.html') < 0;
+        }
+      })
+      crawler.crawl('http://localhost:3000/simple_cycle/page1.html',
+        function onSuccess(page) {
+        },
+        function onFailure() {
+          expect('Errors while crawling').to.be('');
+        },
+        function onAllFinished(crawledUrls) {
+          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          done();
+        }
+      );
+    });
+
+    it('should call onAllFinished when no urls should be crawled', (done) => {
+      crawler.configure({
+        shouldCrawl: function(url) {
+          return false;
+        }
+      })
+      crawler.crawl('http://localhost:3000/simple_cycle/page1.html',
+        function onSuccess(page) {
+        },
+        function onFailure() {
+          expect('Errors while crawling').to.be('');
+        },
+        function onAllFinished(crawledUrls) {
+          expect(crawledUrls.length).toEqual(0);
+          done();
+        }
+      );
+    });
+  });
+
   //TODO: Test for the correct referer value in a chain of visited pages
   //TODO: Test for the shouldCrawlLinksFrom function
   //TODO: Test for shouldCrawl

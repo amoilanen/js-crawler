@@ -190,7 +190,11 @@ Crawler.prototype._requestUrl = function(options, callback) {
     });
   }, null, [options, callback], function shouldSkip() {
     //console.log('Should skip? url = ', url, _.contains(self.knownUrls, url) || !self.shouldCrawl(url));
-    return _.contains(self.knownUrls, url) || !self.shouldCrawl(url);
+    var shouldCrawlUrl = self.shouldCrawl(url);
+    if (!shouldCrawlUrl) {
+      self._finishedCrawling(url);
+    }
+    return _.contains(self.knownUrls, url) || !shouldCrawlUrl;
   });
 };
 
@@ -204,7 +208,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
 
   this._requestUrl({
     url: url,
-    encoding: null,				// Added by @tibetty so as to avoid request treating body as a string by default
+    encoding: null, // Added by @tibetty so as to avoid request treating body as a string by default
     rejectUnauthorized : false,
     followRedirect: true,
     followAllRedirects: true,
