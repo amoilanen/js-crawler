@@ -433,6 +433,40 @@ Link c\
           expect(_.chain(crawler.knownUrls).keys().sort().value()).toEqual(['redirect1', 'redirect2', 'redirect3', 'someUrl']);
         });
 
+        it('should call onSuccess with the latest url in the redirect chain', function() {
+          var lastUrlInRedirectChain = 'lastUrlInRedirectChain';
+          response = {
+            statusCode: OK,
+            headers: {
+              'content-type': 'text/html'
+            },
+            request: {
+              uri: {
+                href: lastUrlInRedirectChain
+              }
+            },
+            body: body
+          };
+          crawler._requestUrl.and.callFake(function(options, callback) {
+            crawler._redirects = [
+              {redirectUri: url},
+              {redirectUri: lastUrlInRedirectChain}
+            ];
+            callback(null, response, body);
+          });
+          var onSuccess = jasmine.createSpy('onSuccess');
+          crawler.onSuccess = onSuccess;
+          crawler._crawlUrl(url, referer, depth);
+          expect(onSuccess).toHaveBeenCalledWith({
+            url: lastUrlInRedirectChain,
+            status: 200,
+            content: body,
+            error: null,
+            response: response,
+            body: body,
+            referer: referer
+          });
+        });
 
         describe('shouldCrawl', function() {
 

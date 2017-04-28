@@ -235,7 +235,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       //console.log('lastUrlInRedirectChain = %s', lastUrlInRedirectChain);
       if (self.shouldCrawl(lastUrlInRedirectChain)) {
         self.onSuccess({
-          url: url,
+          url: lastUrlInRedirectChain,
           status: response.statusCode,
           content: body,
           error: error,
