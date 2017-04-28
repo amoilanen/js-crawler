@@ -37,6 +37,47 @@ describe('crawler', function() {
     });
   });
 
+  describe('shortened urls', () => {
+
+    function testShortenedUrl(shortenedUrl) {
+      it('should crawl all the real urls', function(done) {
+        var crawledUrls = [];
+        var expectedUrls = [
+          'http://localhost:3000/graph_no_cycles/page1.html',
+          'http://localhost:3000/graph_no_cycles/page2.html',
+          'http://localhost:3000/graph_no_cycles/page3.html',
+          'http://localhost:3000/graph_no_cycles/sublevel/page4.html',
+          'http://localhost:3000/graph_no_cycles/sublevel/sublevel2/page5.html'
+        ];
+
+        crawler.crawl(shortenedUrl,
+          function onSuccess(page) {
+            crawledUrls.push(page.url);
+          },
+          function onFailure() {
+            expect('Errors while crawling').to.be('');
+          },
+          function onAllFinished(crawledUrls) {
+            expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+            done();
+          }
+        );
+      });
+    }
+
+    describe('redirect with status 302', () => {
+      testShortenedUrl('http://localhost:3000/shortened');
+    });
+
+    describe('bit.ly redirect with status 301', () => {
+      testShortenedUrl('http://localhost:3000/bitly-shortened');
+    });
+
+    describe('goo.gl redirect with status 307', () => {
+      testShortenedUrl('http://localhost:3000/google-shortened');
+    });
+  });
+
   describe('redirects', () => {
 
     it('should crawl all urls in redirect chain and do not crawl them again', (done) => {
