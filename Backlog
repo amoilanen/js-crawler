@@ -1,0 +1,29 @@
+- Add the ability to switch the crawling engine: headless Chrome or Node.js requests
+
+- Migrate to ES6 or Typescript, modern tooling
+
+- Enable debugging, when crawler is passed debug: true option log information about crawled urls, content etc.?
+
+- It should be possible to limit the number of requests not only by the number of requests per second but also
+by the number of concurrent active requests, i.e. maxConcurrentRequests: 5
+This should provide yet another sensible approach to limiting the bandwidth being used up.
+
+- Add the ability to avoid crawling non-text urls such as audio and video files, can take a lot of bandwidth
+
+- In case there is an error when crawling some url, this url can be queued again, and only fully abandoned from crawling after another 2 repeated failures
+
+- Limit the section of the page that should be crawled https://github.com/antivanov/js-crawler/issues/15
+
+- Normalize the urls, so that urls https://github.com https://github.com/ are considered to be the same url
+
+- Re-factor the crawler, add unit tests and the build infrastructure
+
+- Add end-to-end tests for the following cases:
+- Redirects
+- Binary content
+- Several pages referencing each other (tree like structure)
+- Handle cycles: page 1 references page 2 and page 2 references page 1
+- Look at and test more the API for forgetting crawled urls
+- Better intuitive API for crawling several urls
+- Move sources under the src directory, then bundle during the build
+- Code coverage

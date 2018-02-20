@@ -159,7 +159,7 @@ describe('crawler', function() {
         function onError(page) {
           expect(page.url).toEqual('http://localhost:3000/one_page_graph/no_such_page.html');
           expect(page.status).toEqual(HTTP_NOT_FOUND);
-          expect(page.content).toEqual('Cannot GET /one_page_graph/no_such_page.html\n');
+          expect(page.content).toContain('Cannot GET /one_page_graph/no_such_page.html');
           expect(page.error).toBeNull();
           expect(page.response).not.toBeNull();
           expect(page.body).toEqual(page.content);
