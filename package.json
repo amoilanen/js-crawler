@@ -1,6 +1,6 @@
 {
   "name": "js-crawler",
-  "version": "0.3.20",
+  "version": "0.4.0",
   "description": "Web crawler for Node.js",
   "main": "crawler.js",
   "directories": {
@@ -11,8 +11,9 @@
     "underscore": "~1.8.3"
   },
   "devDependencies": {
-    "express": "^4.16.2",
+    "@types/node": "^9.4.6",
     "browserify": "^13.0.0",
+    "express": "^4.16.2",
     "grunt": "^0.4.5",
     "grunt-eslint": "^18.0.0",
     "grunt-karma": "^0.12.2",
@@ -25,9 +26,11 @@
     "karma-jasmine-html-reporter": "^0.2.0",
     "karma-phantomjs-launcher": "^1.0.0",
     "phantomjs-prebuilt": "^2.1.6",
+    "typescript": "^2.7.2",
     "watchify": "^3.7.0"
   },
   "scripts": {
+    "build": "tsc -p .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

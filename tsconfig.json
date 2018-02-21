@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": [
+      "es6"
+    ],
+    "moduleResolution": "node",
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "lib",
+    "module": "commonjs"
+  },
+  "include": [
+    "crawler.ts", "src/**/*.ts"
+  ]
+}

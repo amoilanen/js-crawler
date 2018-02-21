@@ -1,6 +1,8 @@
 js-crawler
 ==========
 
+# ! WARNING: This is experimental unstable branch, things can be broken here, use 'master' instead
+
 Web crawler for Node.JS, both HTTP and HTTPS are supported.
 
 ## Installation

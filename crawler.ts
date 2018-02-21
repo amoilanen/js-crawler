@@ -47,7 +47,7 @@ Executor.prototype._processQueueItem = function() {
       if (shouldSkipNext) {
         setTimeout(function() {
           self._processQueueItem();
-        });
+        }, 0);
         return;
       } else {
         nextExecution.func.apply(nextExecution.context, nextExecution.args);
