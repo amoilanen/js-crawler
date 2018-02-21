@@ -605,7 +605,9 @@ Link c\
 
       it('should skip known url', function() {
         crawler.workExecutor.submit.and.callFake(function(func, context, args, shouldSkip) {
-          crawler.knownUrls = [url];
+          crawler.knownUrls = {
+            url: true
+          };
           expect(shouldSkip(url)).toBe(true);
         });
         crawler._requestUrl({

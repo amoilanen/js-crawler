@@ -175,7 +175,7 @@ Crawler.prototype._requestUrl = function(options, callback) {
   var url = options.url;
 
   //Do not request a url if it has already been crawled
-  if (_.contains(self._currentUrlsToCrawl, url) || _.contains(self.knownUrls, url)) {
+  if (_.contains(self._currentUrlsToCrawl, url) || _.contains(_.keys(self.knownUrls), url)) {
     return;
   }
 
@@ -189,12 +189,12 @@ Crawler.prototype._requestUrl = function(options, callback) {
       self._concurrentRequestNumber--;
     });
   }, null, [options, callback], function shouldSkip() {
-    //console.log('Should skip? url = ', url, _.contains(self.knownUrls, url) || !self.shouldCrawl(url));
+    //console.log('Should skip? url = ', url, _.contains(_.keys(self.knownUrls), url) || !self.shouldCrawl(url));
     var shouldCrawlUrl = self.shouldCrawl(url);
     if (!shouldCrawlUrl) {
       self._finishedCrawling(url);
     }
-    return _.contains(self.knownUrls, url) || !shouldCrawlUrl;
+    return _.contains(_.keys(self.knownUrls), url) || !shouldCrawlUrl;
   });
 };
 
