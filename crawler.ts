@@ -1,66 +1,12 @@
 var request = require('request');
 var _ = require('underscore');
 var url = require('url');
+const Executor = require('./src/executor').default;
 
 var DEFAULT_DEPTH = 2;
 var DEFAULT_MAX_CONCURRENT_REQUESTS = 10;
 var DEFAULT_MAX_REQUESTS_PER_SECOND = 100;
 var DEFAULT_USERAGENT = 'crawler/js-crawler';
-
-/*
- * Executor that handles throttling and task processing rate.
- */
-function Executor(opts) {
-  this.maxRatePerSecond = opts.maxRatePerSecond;
-  this.onFinished = opts.finished || function() {};
-  this.canProceed = opts.canProceed || function() {return true;};
-  this.queue = [];
-  this.isStopped = false;
-  this.timeoutMs = (1 / this.maxRatePerSecond) * 1000;
-}
-
-Executor.prototype.submit = function(func, context, args, shouldSkip) {
-  this.queue.push({
-    func: func,
-    context: context,
-    args: args,
-    shouldSkip: shouldSkip
-  });
-};
-
-Executor.prototype.start = function() {
-  this._processQueueItem();
-};
-
-Executor.prototype.stop = function() {
-  this.isStopped = true;
-};
-
-Executor.prototype._processQueueItem = function() {
-  var self = this;
-
-  if (this.canProceed()) {
-    if (this.queue.length !== 0) {
-      var nextExecution = this.queue.shift();
-      var shouldSkipNext = (nextExecution.shouldSkip && nextExecution.shouldSkip.call(nextExecution.context));
-
-      if (shouldSkipNext) {
-        setTimeout(function() {
-          self._processQueueItem();
-        }, 0);
-        return;
-      } else {
-        nextExecution.func.apply(nextExecution.context, nextExecution.args);
-      }
-    }
-  }
-  if (this.isStopped) {
-    return;
-  }
-  setTimeout(function() {
-    self._processQueueItem();
-  }, this.timeoutMs);
-};
 
 /*
  * Main crawler functionality.

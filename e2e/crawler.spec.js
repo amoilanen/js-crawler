@@ -1,4 +1,4 @@
-var Crawler = require('../crawler');
+var Crawler = require('../compiled/crawler');
 var _ = require('underscore');
 
 describe('crawler', function() {

@@ -7,7 +7,7 @@
     "moduleResolution": "node",
     "declaration": true,
     "sourceMap": true,
-    "outDir": "lib",
+    "outDir": "compiled",
     "module": "commonjs"
   },
   "include": [
