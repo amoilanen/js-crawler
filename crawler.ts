@@ -1,12 +1,12 @@
-var request = require('request');
-var _ = require('underscore');
-var url = require('url');
-const Executor = require('./src/executor').default;
+const request = require('request');
+import * as _ from 'underscore';
+import { resolve as urlResolve } from 'url';
+import Executor from './src/executor';
 
-var DEFAULT_DEPTH = 2;
-var DEFAULT_MAX_CONCURRENT_REQUESTS = 10;
-var DEFAULT_MAX_REQUESTS_PER_SECOND = 100;
-var DEFAULT_USERAGENT = 'crawler/js-crawler';
+const DEFAULT_DEPTH = 2;
+const DEFAULT_MAX_CONCURRENT_REQUESTS = 10;
+const DEFAULT_MAX_REQUESTS_PER_SECOND = 100;
+const DEFAULT_USERAGENT = 'crawler/js-crawler';
 
 /*
  * Main crawler functionality.
@@ -248,7 +248,7 @@ Crawler.prototype._getBaseUrl = function(defaultBaseUrl, body) {
     return defaultBaseUrl;
   }
 
-  return url.resolve(defaultBaseUrl, baseUrlInPage[1]);
+  return urlResolve(defaultBaseUrl, baseUrlInPage[1]);
 };
 
 Crawler.prototype._isLinkProtocolSupported = function(link) {
@@ -269,7 +269,7 @@ Crawler.prototype._getAllUrls = function(defaultBaseUrl, body) {
       var match = /href=[\"\'](.*?)[#\"\']/i.exec(link);
 
       link = match[1];
-      link = url.resolve(baseUrl, link);
+      link = urlResolve(baseUrl, link);
       return link;
     })
     .uniq()

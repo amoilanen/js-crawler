@@ -1,6 +1,17 @@
 - Add the ability to switch the crawling engine: headless Chrome or Node.js requests
 
 - Migrate to ES6 or Typescript, modern tooling
+  -- Should be possible to run crawler examples
+  -- Should be possible to run crawler end-to-end tests
+
+  -- Should be possible to run crawler unit tests, both on the console and in the browser
+  -- Re-factor crawler, extract more classes, add types
+
+  -- Should be possible to publish an NPM package and install it
+  -- Should be possible to lint Typescript code
+
+- Replace PhantomJS with headless Chrome when running unit tests
+- Add support for other request engines: headless Chrome, make it configurable
 
 - Enable debugging, when crawler is passed debug: true option log information about crawled urls, content etc.?
 
