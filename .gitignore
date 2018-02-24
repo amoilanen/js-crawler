@@ -14,6 +14,9 @@ results
 npm-debug.log
 node_modules
 
+compiled
+webpack.dist
+
 lib
 
 .idea/

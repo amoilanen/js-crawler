@@ -636,16 +636,21 @@ Link c\
       var body = 'response body';
 
       it('should increment and decrement concurrent request number, call on started and finished', function() {
+        crawler.request = function(options, callback) {
+          expect(crawler._startedCrawling).toHaveBeenCalledWith(url);
+          expect(crawler._concurrentRequestNumber).toBe(1);
+          //Callback code should call _finishedCrawling and decrement the counter of concurrent requests
+          var callbackContext = {
+            _redirect: {
+              redirects: []
+            }
+          };
+          callback.call(callbackContext, error, response, body);
+          expect(crawler._finishedCrawling).toHaveBeenCalledWith(url);
+          expect(crawler._concurrentRequestNumber).toBe(0);
+        };
         crawler.workExecutor.submit.and.callFake(function(func, context, args, shouldSkip) {
           func(options, callback);
-          crawler.request = function(options, callback) {
-            expect(crawler._startedCrawling).toHaveBeenCalledWith(url);
-            expect(crawler._concurrentRequestNumber).toBe(1);
-            //Callback code should call _finishedCrawling and decrement the counter of concurrent requests
-            callback(error, response, body);
-            expect(crawler._finishedCrawling).toHaveBeenCalledWith(url);
-            expect(crawler._concurrentRequestNumber).toBe(0);
-          };
         });
         crawler._requestUrl({
           url: url
