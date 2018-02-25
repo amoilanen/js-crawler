@@ -1,11 +1,13 @@
 {
   "name": "js-crawler",
-  "version": "0.4.0",
+  "version": "0.9.0",
   "description": "Web crawler for Node.js",
-  "main": "crawler.js",
-  "directories": {
-    "example": "examples"
-  },
+  "main": "compiled/crawler.js",
+  "files": [
+    "compiled/crawler.*",
+    "compiled/src",
+    "examples"
+  ],
   "dependencies": {
     "request": "~2.55.0",
     "underscore": "~1.8.3"
@@ -34,7 +36,8 @@
   "scripts": {
     "build": "tsc -p .",
     "test": "karma start",
-    "test:tdd": "karma start --tdd"
+    "test:tdd": "karma start --tdd",
+    "test:packaging": "./test_packaging.sh"
   },
   "repository": {
     "type": "git",

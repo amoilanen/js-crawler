@@ -1,4 +1,4 @@
-var Crawler = require("../compiled/crawler.js");
+var Crawler = require("js-crawler");
 
 var urlsCrawledCount = 0;
 

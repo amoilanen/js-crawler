@@ -1,7 +1,7 @@
 /*
  * Demonstrates how crawler results can be filtered.
  */
-var Crawler = require("../compiled/crawler");
+var Crawler = require("js-crawler");
 
 console.log(Crawler);
 

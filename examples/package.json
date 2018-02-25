@@ -1,0 +1,13 @@
+{
+  "name": "js-crawler-examples",
+  "version": "0.0.1",
+  "private": true,
+  "description": "This is an example package used to demonstrate how js-crawler can be installed and imported",
+  "main": "angular_links_from_reddit.js",
+  "scripts": {},
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "js-crawler": "file:../js-crawler-0.9.0.tgz"
+  }
+}

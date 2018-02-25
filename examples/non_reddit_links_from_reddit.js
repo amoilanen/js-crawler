@@ -1,7 +1,7 @@
 /*
  * Demonstrates how we can filter out which urls should be crawled.
  */
-var Crawler = require("../compiled/crawler.js");
+var Crawler = require("js-crawler");
 
 var topLevelUrl = "https://www.reddit.com/";
 

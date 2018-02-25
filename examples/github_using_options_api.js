@@ -1,4 +1,4 @@
-var Crawler = require("../compiled/crawler.js");
+var Crawler = require("js-crawler");
 
 var crawler = new Crawler().configure({ignoreRelative: false, depth: 2});
 
