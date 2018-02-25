@@ -1,8 +1,6 @@
 js-crawler
 ==========
 
-# ! WARNING: This is experimental unstable branch, things can be broken here, use 'master' instead
-
 Web crawler for Node.JS, both HTTP and HTTPS are supported.
 
 ## Installation
@@ -233,15 +231,15 @@ Install dependencies
 
 Running the build
 
-`grunt`
+`npm run build`
 
 ##### Unit tests
 
-`grunt karma:unit`
+`npm test`
 
 launches unit tests in the console mode
 
-`grunt karma:unit_browser`
+`npm run test:tdd`
 
 launches a browser in which unit tests can be debugged
 
