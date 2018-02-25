@@ -1,7 +1,7 @@
 const request = require('request');
 import * as _ from 'underscore';
-import { resolve as urlResolve } from 'url';
 import Executor from './src/executor';
+import Response from './src/response';
 
 const DEFAULT_DEPTH = 2;
 const DEFAULT_MAX_CONCURRENT_REQUESTS = 10;
@@ -168,12 +168,14 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
       return;
     }
     self.knownUrls[url] = true;
-    _.each(self._redirects, function(redirect) {
+    _.each(self._redirects, (redirect: any) => {
       self.knownUrls[redirect.redirectUri] = true;
     });
     //console.log('analyzing url = ', url);
-    var isTextContent = self._isTextContent(response);
-    var body = isTextContent ? self._getDecodedBody(response) : '<<...binary content (omitted by js-crawler)...>>';
+    const resp = new Response(response);
+
+    var isTextContent = resp.isTextHtml();
+    var body = resp.getBody();
 
     if (!error && (response.statusCode === 200)) {
       //If no redirects, then response.request.uri.href === url, otherwise last url
@@ -192,7 +194,12 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
         self.knownUrls[lastUrlInRedirectChain] = true;
         self.crawledUrls.push(lastUrlInRedirectChain);
         if (self.shouldCrawlLinksFrom(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
-          self._crawlUrls(self._getAllUrls(lastUrlInRedirectChain, body), lastUrlInRedirectChain, depth - 1);
+          //TODO: If is not textContent just return the empty list of urls in the Respone implementation
+          const crawlOptions = {
+            ignoreRelative: self.ignoreRelative,
+            shouldCrawl: self.shouldCrawl
+          };
+          self._crawlUrls(resp.getAllUrls(lastUrlInRedirectChain, body, crawlOptions), lastUrlInRedirectChain, depth - 1);
         }
       }
     } else if (self.onFailure) {
@@ -210,84 +217,13 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
   });
 };
 
-Crawler.prototype._isTextContent = function(response) {
-  return Boolean(response && response.headers && response.headers['content-type']
-      && response.headers['content-type'].match(/^text\/html.*$/));
-};
-
-Crawler.prototype._getDecodedBody = function(response) {
-  var defaultEncoding = 'utf8';
-  var encoding = defaultEncoding;
-
-  if (response.headers['content-encoding']) {
-    encoding = response.headers['content-encoding'];
-  }
-  //console.log('encoding = "' + encoding + '"');
-  var decodedBody;
-  try {
-    decodedBody = response.body.toString(encoding);
-  } catch (decodingError) {
-    decodedBody = response.body.toString(defaultEncoding);
-  }
-  return decodedBody;
-};
-
-Crawler.prototype._stripComments = function(str) {
-  return str.replace(/<!--.*?-->/g, '');
-};
-
-Crawler.prototype._getBaseUrl = function(defaultBaseUrl, body) {
-
-  /*
-   * Resolving the base url following
-   * the algorithm from https://www.w3.org/TR/html5/document-metadata.html#the-base-element
-   */
-  var baseUrlRegex = /<base href="(.*?)">/;
-  var baseUrlInPage = body.match(baseUrlRegex);
-  if (!baseUrlInPage) {
-    return defaultBaseUrl;
-  }
-
-  return urlResolve(defaultBaseUrl, baseUrlInPage[1]);
-};
-
-Crawler.prototype._isLinkProtocolSupported = function(link) {
-  return (link.indexOf('://') < 0 && link.indexOf('mailto:') < 0)
-    || link.indexOf('http://') >= 0 || link.indexOf('https://') >= 0;
-};
-
-Crawler.prototype._getAllUrls = function(defaultBaseUrl, body) {
-  var self = this;
-  body = this._stripComments(body);
-  var baseUrl = this._getBaseUrl(defaultBaseUrl, body);
-  var linksRegex = self.ignoreRelative ? /<a[^>]+?href=["'].*?:\/\/.*?["']/gmi : /<a[^>]+?href=["'].*?["']/gmi;
-  var links = body.match(linksRegex) || [];
-
-  //console.log('body = ', body);
-  var urls = _.chain(links)
-    .map(function(link) {
-      var match = /href=[\"\'](.*?)[#\"\']/i.exec(link);
-
-      link = match[1];
-      link = urlResolve(baseUrl, link);
-      return link;
-    })
-    .uniq()
-    .filter(function(link) {
-      return self._isLinkProtocolSupported(link) && self.shouldCrawl(link);
-     })
-    .value();
-
-  //console.log('urls to crawl = ', urls);
-  return urls;
-};
-
 Crawler.prototype._crawlUrls = function(urls, referer, depth) {
   var self = this;
 
-  _.each(urls, function(url) {
-    self._crawlUrl(url, referer, depth);
-  });
+_.each(urls, function(url) {
+  self._crawlUrl(url, referer, depth);
+});
+
 };
 
 module.exports = Crawler;

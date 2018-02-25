@@ -2,14 +2,13 @@
 
 - Migrate to ES6 or Typescript, modern tooling
   -- Should be possible to run crawler end-to-end tests
-  -- Should be possible to run crawler examples
-
   -- Should be possible to run crawler unit tests, both on the console and in the browser
-    --- Source maps
+
+  -- Should be possible to run crawler examples
 
   -- Use Mocha and Chai instead of Jasmine for unit tests? Use headless Chrome or Firefox when running tests.
   Replace PhantomJS with headless Chrome when running unit tests
-
+  -- Source map support
 
   -- Re-factor crawler, extract more classes, add types
 
