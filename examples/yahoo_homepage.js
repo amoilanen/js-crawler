@@ -1,4 +1,4 @@
-var Crawler = require("../crawler.js");
+var Crawler = require("../compiled/crawler.js");
 
 var crawledUrls = {};
 

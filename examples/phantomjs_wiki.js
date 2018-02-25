@@ -1,4 +1,4 @@
-var Crawler = require("../crawler.js");
+var Crawler = require("../compiled/crawler.js");
 
 new Crawler().configure({ignoreRelative: false}).crawl("https://github.com/ariya/phantomjs/wiki/Quick-Start",
   function onSuccess(page) {

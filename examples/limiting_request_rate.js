@@ -1,4 +1,4 @@
-var Crawler = require("../crawler.js");
+var Crawler = require("../compiled/crawler.js");
 
 //Also possible to configure maximum 1 request per 10 seconds
 //var crawler = new Crawler().configure({maxRequestsPerSecond: 0.1});
