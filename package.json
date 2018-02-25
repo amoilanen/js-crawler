@@ -35,6 +35,7 @@
   },
   "scripts": {
     "build": "tsc -p .",
+    "lint": "tslint -c tslint.json crawler.ts src/*.ts spec/*.ts",
     "test": "karma start",
     "test:tdd": "karma start --tdd",
     "test:packaging": "./test_packaging.sh"

@@ -4,14 +4,15 @@
   -- Should be possible to run crawler end-to-end tests - OK
   -- Should be possible to run crawler unit tests, both on the console and in the browser - OK
   -- Should be possible to run crawler examples - OK
+  -- Should be possible to publish an NPM package and install it - OK
+  -- Should be possible to lint Typescript code - OK
 
-  -- Should be possible to publish an NPM package and install it
-
-  -- Should be possible to lint Typescript code
   -- Re-factor crawler, extract more classes, add types
+    --- Extract separate tests for Executor and Response
 
   -- Use Mocha and Chai instead of Jasmine for unit tests? Use headless Chrome or Firefox when running tests.
   Replace PhantomJS with headless Chrome when running unit tests
+  -- Fix linting errors
 
 
 
