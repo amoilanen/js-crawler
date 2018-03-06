@@ -16,6 +16,7 @@
     "@types/jasmine": "^2.8.6",
     "@types/node": "^9.4.6",
     "@types/underscore": "^1.8.7",
+    "@types/webpack-env": "^1.13.5",
     "awesome-typescript-loader": "^3.4.1",
     "express": "^4.16.2",
     "jasmine-core": "^2.4.1",
@@ -31,7 +32,7 @@
     "phantomjs": "^2.1.7",
     "source-map-loader": "^0.2.3",
     "typescript": "^2.7.2",
-    "webpack": "^3.11.0"
+    "webpack": "^4.1.0"
   },
   "scripts": {
     "build": "tsc -p .",

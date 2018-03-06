@@ -13,9 +13,6 @@
   -- Use Mocha and Chai instead of Jasmine for unit tests? Use headless Chrome or Firefox when running tests.
   Replace PhantomJS with headless Chrome when running unit tests
   -- Fix linting errors
-
-
-
   -- Source map support
 
 - Add support for other request engines: headless Chrome, make it configurable

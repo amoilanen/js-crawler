@@ -3,14 +3,15 @@ var webpack = require("webpack");
 module.exports = function(config) {
   var configuration = {
     files: [
-      'spec/crawler.spec.ts'
+      'spec/index.ts'
     ],
     frameworks: [ 'jasmine'],
     preprocessors: {
-      'spec/crawler.spec.ts': [ 'webpack' ]
+      'spec/*.ts': [ 'webpack' ]
     },
     reporters: ['spec'],
     webpack: {
+      mode: 'development',
       devtool: 'source-map',
       resolve: {
         extensions: ['.ts', '.tsx', '.js', '.json']
