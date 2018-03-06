@@ -6,35 +6,43 @@ export interface CrawlOptions {
   shouldCrawl: (link: string) => boolean
 }
 
-export default class Response {
-  response: any
+export interface HttpResponse {
+  headers: {
+    [headerName: string]: string
+  },
+  body: {
+    toString: (string) => string
+  }
+}
 
-  //TODO: Provide real type of a response
-  constructor(response: any) {
+export default class Response {
+  response: HttpResponse
+
+  constructor(response: HttpResponse) {
     this.response = response;
   }
 
-  isTextHtml() {
+  isTextHtml(): boolean {
     const { response } = this;
 
     return Boolean(response && response.headers && response.headers['content-type']
       && response.headers['content-type'].match(/^text\/html.*$/));
   }
 
-  getBody() {
+  getBody(): string {
     if (!this.isTextHtml()) {
       return '<<...binary content (omitted by js-crawler)...>>';
     }
 
     const { response } = this;
     const defaultEncoding = 'utf8';
-    var encoding = defaultEncoding;
+    let encoding = defaultEncoding;
 
     if (response.headers['content-encoding']) {
       encoding = response.headers['content-encoding'];
     }
 
-    var decodedBody;
+    let decodedBody: string;
     try {
       decodedBody = response.body.toString(encoding);
     } catch (decodingError) {
@@ -43,18 +51,18 @@ export default class Response {
     return decodedBody;
   }
 
-  stripComments(str) {
+  stripComments(str: string): string {
     return str.replace(/<!--.*?-->/g, '');
   }
 
-  getBaseUrl(defaultBaseUrl, body) {
+  getBaseUrl(defaultBaseUrl: string, body: string): string {
 
     /*
      * Resolving the base url following
      * the algorithm from https://www.w3.org/TR/html5/document-metadata.html#the-base-element
      */
-    var baseUrlRegex = /<base href="(.*?)">/;
-    var baseUrlInPage = body.match(baseUrlRegex);
+    const baseUrlRegex = /<base href="(.*?)">/;
+    const baseUrlInPage = body.match(baseUrlRegex);
     if (!baseUrlInPage) {
       return defaultBaseUrl;
     }
@@ -62,21 +70,21 @@ export default class Response {
     return urlResolve(defaultBaseUrl, baseUrlInPage[1]);
   };
 
-  isLinkProtocolSupported(link) {
+  isLinkProtocolSupported(link: string): boolean {
     return (link.indexOf('://') < 0 && link.indexOf('mailto:') < 0)
       || link.indexOf('http://') >= 0 || link.indexOf('https://') >= 0;
   }
 
-  getAllUrls(defaultBaseUrl, body, options: CrawlOptions) {
+  getAllUrls(defaultBaseUrl: string, body: string, options: CrawlOptions): string[] {
     body = this.stripComments(body);
-    var baseUrl = this.getBaseUrl(defaultBaseUrl, body);
-    var linksRegex = options.ignoreRelative ? /<a[^>]+?href=["'].*?:\/\/.*?["']/gmi : /<a[^>]+?href=["'].*?["']/gmi;
-    var links = body.match(linksRegex) || [];
+    const baseUrl = this.getBaseUrl(defaultBaseUrl, body);
+    const linksRegex = options.ignoreRelative ? /<a[^>]+?href=["'].*?:\/\/.*?["']/gmi : /<a[^>]+?href=["'].*?["']/gmi;
+    const links = body.match(linksRegex) || [];
 
     //console.log('body = ', body);
-    var urls = _.chain(links)
+    const urls = _.chain(links)
       .map(function(link) {
-        var match = /href=[\"\'](.*?)[#\"\']/i.exec(link);
+        const match = /href=[\"\'](.*?)[#\"\']/i.exec(link);
 
         link = match[1];
         link = urlResolve(baseUrl, link);
