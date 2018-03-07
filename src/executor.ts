@@ -2,17 +2,10 @@
  * Executor that handles throttling and task processing rate.
  */
 
-export interface WorkQueueItem {
-  func: Function;
-  context: any;
-  args: Array<any>;
-  shouldSkip: () => boolean;
-}
-
 export default class Executor {
   maxRatePerSecond: number;
   canProceed: () => boolean;
-  queue: Array<WorkQueueItem>;
+  queue: Array<Function>;
   isStopped: boolean;
   timeoutMs: number;
 
@@ -24,44 +17,30 @@ export default class Executor {
     this.timeoutMs = (1 / this.maxRatePerSecond) * 1000;
   }
 
-  submit(func: Function, context: any, args: Array<any>, shouldSkip: () => boolean) {
-    this.queue.push({
-      func: func,
-      context: context,
-      args: args,
-      shouldSkip: shouldSkip
-    });
+  submit(func: Function) {
+    this.queue.push(func);
   }
 
   start() {
-    this._processQueueItem();
+    this.processQueueItem();
   }
 
   stop() {
     this.isStopped = true;
   }
 
-  _processQueueItem() {
+  processQueueItem() {
     if (this.canProceed()) {
       if (this.queue.length !== 0) {
-        var nextExecution = this.queue.shift();
-        var shouldSkipNext = (nextExecution.shouldSkip && nextExecution.shouldSkip.call(nextExecution.context));
-  
-        if (shouldSkipNext) {
-          setTimeout(() => {
-            this._processQueueItem();
-          }, 0);
-          return;
-        } else {
-          nextExecution.func.apply(nextExecution.context, nextExecution.args);
-        }
+        const nextExecution = this.queue.shift();
+        nextExecution();
       }
     }
     if (this.isStopped) {
       return;
     }
     setTimeout(() => {
-      this._processQueueItem();
+      this.processQueueItem();
     }, this.timeoutMs);
   }
 }
