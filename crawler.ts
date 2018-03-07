@@ -37,7 +37,6 @@ function Crawler() {
   };
   //Urls that are queued for crawling, for some of them HTTP requests may not yet have been issued
   this._currentUrlsToCrawl = [];
-  this._concurrentRequestNumber = 0;
 
   //Injecting request as a dependency for unit test support
   this.request = request;
@@ -58,15 +57,10 @@ Crawler.prototype.configure = function(options) {
   return this;
 };
 
-//TODO: Move concurrentRequestNumber and maxConcurrentRequestNumber to Executor
 Crawler.prototype._createExecutor = function() {
-  var self = this;
-
   return new Executor({
     maxRatePerSecond: this.maxRequestsPerSecond,
-    canProceed: function() {
-      return self._concurrentRequestNumber < self.maxConcurrentRequests;
-    }
+    maxConcurrentTasks: this.maxConcurrentRequestNumber
   });
 };
 
@@ -107,10 +101,13 @@ Crawler.prototype._startedCrawling = function(url) {
 };
 
 Crawler.prototype._finishedCrawling = function(url) {
+  //console.log("Finished crawling url = ", url);
+  //console.log("_currentUrlsToCrawl = ", this._currentUrlsToCrawl);
   var indexOfUrl = this._currentUrlsToCrawl.indexOf(url);
 
   this._currentUrlsToCrawl.splice(indexOfUrl, 1);
   if (this._currentUrlsToCrawl.length === 0) {
+    //console.log("Crawling finished!");
     this.onAllFinished && this.onAllFinished(this.crawledUrls);
     this.workExecutor && this.workExecutor.stop();
   }
@@ -141,10 +138,8 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
   this.workExecutor.submit(function() {
 
     if (self._shouldSkip(url)) {
-      return;
+      return Promise.resolve();
     }
-
-    self._concurrentRequestNumber++;
     const requestOptions = {
       url: url,
       encoding: null, // Added by @tibetty so as to avoid request treating body as a string by default
@@ -156,61 +151,63 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
         'Referer': referer
       }
     };
-    self.request(requestOptions, function(error, response) {
-      if (self.knownUrls[url]) {
-        //Was already crawled while the request has been processed, no need to call callbacks
-        return;
-      }
-      self.knownUrls[url] = true;
-      _.each(this._redirect.redirects, (redirect: any) => {
-        self.knownUrls[redirect.redirectUri] = true;
-      });
-      //console.log('analyzing url = ', url);
-      //console.log('response =', JSON.stringify(response, null, 2));
-      const resp = new Response(response);
-
-      var isTextContent = resp.isTextHtml();
-      var body = resp.getBody();
-
-      if (!error && (response.statusCode === 200)) {
-        //If no redirects, then response.request.uri.href === url, otherwise last url
-        var lastUrlInRedirectChain = response.request.uri.href;
-        //console.log('lastUrlInRedirectChain = %s', lastUrlInRedirectChain);
-        if (self.shouldCrawl(lastUrlInRedirectChain)) {
-          self.onSuccess({
-            url: lastUrlInRedirectChain,
-            status: response.statusCode,
+    return new Promise((resolve, reject) => {
+      self.request(requestOptions, function(error, response) {
+        if (self.knownUrls[url]) {
+          //Was already crawled while the request has been processed, no need to call callbacks
+          return;
+        }
+        self.knownUrls[url] = true;
+        _.each(this._redirect.redirects, (redirect: any) => {
+          self.knownUrls[redirect.redirectUri] = true;
+        });
+        //console.log('analyzing url = ', url);
+        //console.log('response =', JSON.stringify(response, null, 2));
+        const resp = new Response(response);
+  
+        var isTextContent = resp.isTextHtml();
+        var body = resp.getBody();
+  
+        if (!error && (response.statusCode === 200)) {
+          //If no redirects, then response.request.uri.href === url, otherwise last url
+          var lastUrlInRedirectChain = response.request.uri.href;
+          //console.log('lastUrlInRedirectChain = %s', lastUrlInRedirectChain);
+          if (self.shouldCrawl(lastUrlInRedirectChain)) {
+            self.onSuccess({
+              url: lastUrlInRedirectChain,
+              status: response.statusCode,
+              content: body,
+              error: error,
+              response: response,
+              body: body,
+              referer: referer || ""
+            });
+            self.knownUrls[lastUrlInRedirectChain] = true;
+            self.crawledUrls.push(lastUrlInRedirectChain);
+            if (self.shouldCrawlLinksFrom(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
+              //TODO: If is not textContent just return the empty list of urls in the Respone implementation
+              const crawlOptions = {
+                ignoreRelative: self.ignoreRelative,
+                shouldCrawl: self.shouldCrawl
+              };
+              self._crawlUrls(resp.getAllUrls(lastUrlInRedirectChain, body, crawlOptions), lastUrlInRedirectChain, depth - 1);
+            }
+          }
+        } else if (self.onFailure) {
+          self.onFailure({
+            url: url,
+            status: response ? response.statusCode : undefined,
             content: body,
             error: error,
             response: response,
             body: body,
             referer: referer || ""
           });
-          self.knownUrls[lastUrlInRedirectChain] = true;
-          self.crawledUrls.push(lastUrlInRedirectChain);
-          if (self.shouldCrawlLinksFrom(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
-            //TODO: If is not textContent just return the empty list of urls in the Respone implementation
-            const crawlOptions = {
-              ignoreRelative: self.ignoreRelative,
-              shouldCrawl: self.shouldCrawl
-            };
-            self._crawlUrls(resp.getAllUrls(lastUrlInRedirectChain, body, crawlOptions), lastUrlInRedirectChain, depth - 1);
-          }
+          self.crawledUrls.push(url);
         }
-      } else if (self.onFailure) {
-        self.onFailure({
-          url: url,
-          status: response ? response.statusCode : undefined,
-          content: body,
-          error: error,
-          response: response,
-          body: body,
-          referer: referer || ""
-        });
-        self.crawledUrls.push(url);
-      }
-      self._finishedCrawling(url);
-      self._concurrentRequestNumber--;
+        self._finishedCrawling(url);
+        resolve();
+      });
     });
   });
 };
@@ -218,10 +215,9 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
 Crawler.prototype._crawlUrls = function(urls, referer, depth) {
   var self = this;
 
-_.each(urls, function(url) {
-  self._crawlUrl(url, referer, depth);
-});
-
+  _.each(urls, function(url) {
+    self._crawlUrl(url, referer, depth);
+  });
 };
 
 module.exports = Crawler;
