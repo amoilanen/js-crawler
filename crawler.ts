@@ -1,6 +1,6 @@
-const request = require('request');
 import * as _ from 'underscore';
 import Executor from './src/executor';
+import Request, {RequestSuccess, RequestFailure} from './src/request';
 import Response from './src/response';
 
 const DEFAULT_DEPTH = 2;
@@ -37,9 +37,6 @@ function Crawler() {
   };
   //Urls that are queued for crawling, for some of them HTTP requests may not yet have been issued
   this._currentUrlsToCrawl = [];
-
-  //Injecting request as a dependency for unit test support
-  this.request = request;
 }
 
 Crawler.prototype.configure = function(options) {
@@ -60,7 +57,7 @@ Crawler.prototype.configure = function(options) {
 Crawler.prototype._createExecutor = function() {
   return new Executor({
     maxRatePerSecond: this.maxRequestsPerSecond,
-    maxConcurrentTasks: this.maxConcurrentRequestNumber
+    maxConcurrentTasks: this.maxConcurrentRequests
   });
 };
 
@@ -123,6 +120,7 @@ Crawler.prototype._shouldSkip = function(url) {
 }
 
 Crawler.prototype._crawlUrl = function(url, referer, depth) {
+
   //console.log('_crawlUrl: url = %s, depth = %s', url, depth);
   if ((depth === 0) || this.knownUrls[url]) {
     return;
@@ -133,81 +131,64 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
   }
   this._startedCrawling(url);
 
-  var self = this;
+  this.workExecutor.submit(() => {
 
-  this.workExecutor.submit(function() {
-
-    if (self._shouldSkip(url)) {
+    if (this._shouldSkip(url)) {
       return Promise.resolve();
     }
-    const requestOptions = {
-      url: url,
-      encoding: null, // Added by @tibetty so as to avoid request treating body as a string by default
-      rejectUnauthorized : false,
-      followRedirect: true,
-      followAllRedirects: true,
-      headers: {
-        'User-Agent': self.userAgent,
-        'Referer': referer
+
+    const req = new Request({
+      referer,
+      url,
+      userAgent: this.userAgent
+    });
+    return req.submit().then((success: RequestSuccess) => {
+      if (this.knownUrls[url]) {
+        //Was already crawled while the request has been processed, no need to call callbacks
+        return;
       }
-    };
-    return new Promise((resolve, reject) => {
-      self.request(requestOptions, function(error, response) {
-        if (self.knownUrls[url]) {
-          //Was already crawled while the request has been processed, no need to call callbacks
-          return;
-        }
-        self.knownUrls[url] = true;
-        _.each(this._redirect.redirects, (redirect: any) => {
-          self.knownUrls[redirect.redirectUri] = true;
-        });
-        //console.log('analyzing url = ', url);
-        //console.log('response =', JSON.stringify(response, null, 2));
-        const resp = new Response(response);
-  
-        var isTextContent = resp.isTextHtml();
-        var body = resp.getBody();
-  
-        if (!error && (response.statusCode === 200)) {
-          //If no redirects, then response.request.uri.href === url, otherwise last url
-          var lastUrlInRedirectChain = response.request.uri.href;
-          //console.log('lastUrlInRedirectChain = %s', lastUrlInRedirectChain);
-          if (self.shouldCrawl(lastUrlInRedirectChain)) {
-            self.onSuccess({
-              url: lastUrlInRedirectChain,
-              status: response.statusCode,
-              content: body,
-              error: error,
-              response: response,
-              body: body,
-              referer: referer || ""
-            });
-            self.knownUrls[lastUrlInRedirectChain] = true;
-            self.crawledUrls.push(lastUrlInRedirectChain);
-            if (self.shouldCrawlLinksFrom(lastUrlInRedirectChain) && depth > 1 && isTextContent) {
-              //TODO: If is not textContent just return the empty list of urls in the Respone implementation
-              const crawlOptions = {
-                ignoreRelative: self.ignoreRelative,
-                shouldCrawl: self.shouldCrawl
-              };
-              self._crawlUrls(resp.getAllUrls(lastUrlInRedirectChain, body, crawlOptions), lastUrlInRedirectChain, depth - 1);
-            }
-          }
-        } else if (self.onFailure) {
-          self.onFailure({
-            url: url,
-            status: response ? response.statusCode : undefined,
-            content: body,
-            error: error,
-            response: response,
-            body: body,
-            referer: referer || ""
-          });
-          self.crawledUrls.push(url);
-        }
-        self._finishedCrawling(url);
-        resolve();
+      _.each(success.visitedUrls, (url: string) => {
+        this.knownUrls[url] = true;
       });
+
+      const resp = new Response(success.response);
+      const body = resp.getBody();
+      if (this.shouldCrawl(success.lastVisitedUrl)) {
+        this.onSuccess({
+          url: success.lastVisitedUrl,
+          status: success.response.statusCode,
+          content: body,
+          error: null,
+          response: success.response,
+          body: body,
+          referer: referer || ""
+        });
+        this.knownUrls[success.lastVisitedUrl] = true;
+        this.crawledUrls.push(success.lastVisitedUrl);
+        if (this.shouldCrawlLinksFrom(success.lastVisitedUrl) && depth > 1 && resp.isTextHtml()) {
+          //TODO: If is not textContent just return the empty list of urls in the Response implementation
+          const crawlOptions = {
+            ignoreRelative: this.ignoreRelative,
+            shouldCrawl: this.shouldCrawl
+          };
+          this._crawlUrls(resp.getAllUrls(success.lastVisitedUrl, body, crawlOptions), success.lastVisitedUrl, depth - 1);
+        }
+      }
+    }).catch((failure: RequestFailure) => {
+      const resp = new Response(failure.response);
+      const body = resp.getBody();
+      this.onFailure({
+        url: url,
+        status: failure.response ? failure.response.statusCode : undefined,
+        content: body,
+        error: failure.error,
+        response: failure.response,
+        body: body,
+        referer: referer || ""
+      });
+      this.crawledUrls.push(url);
+    }).then(() => {
+      this._finishedCrawling(url);
     });
   });
 };

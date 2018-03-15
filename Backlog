@@ -11,6 +11,7 @@
     --- Extract separate tests for Executor and Response
 
   -- Use Mocha and Chai instead of Jasmine for unit tests? Use headless Chrome or Firefox when running tests.
+     -- Test request failing, that concurrent request number is decreased as expected
   Replace PhantomJS with headless Chrome when running unit tests
   -- Fix linting errors
   -- Source map support

@@ -19,7 +19,7 @@ module.exports = function(config) {
       module: {
         rules: [
           { test: /\.tsx?$/, loader: 'awesome-typescript-loader' },
-          { enforce: "pre", test: /\.js$/, loader: 'source-map-loader' }
+          { enforce: 'pre', test: /\.ts$/, loader: 'source-map-loader' }
         ]
       },
       externals: {

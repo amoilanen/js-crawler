@@ -11,7 +11,13 @@ export interface HttpResponse {
     [headerName: string]: string
   },
   body: {
-    toString: (string) => string
+    toString(encoding: string): string
+  },
+  statusCode: number,
+  request: {
+    uri: {
+      href: string
+    }
   }
 }
 
