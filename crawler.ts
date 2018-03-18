@@ -1,12 +1,8 @@
 import * as _ from 'underscore';
 import Executor from './src/executor';
 import Request, {RequestSuccess, RequestFailure} from './src/request';
-import Response from './src/response';
-
-const DEFAULT_DEPTH = 2;
-const DEFAULT_MAX_CONCURRENT_REQUESTS = 10;
-const DEFAULT_MAX_REQUESTS_PER_SECOND = 100;
-const DEFAULT_USERAGENT = 'crawler/js-crawler';
+import Response, { CrawlOptions } from './src/response';
+import Configuration from './src/configuration';
 
 /*
  * Main crawler functionality.
@@ -24,60 +20,28 @@ function Crawler() {
    * iff there were no redirects while crawling.
    */
   this.crawledUrls = [];
-  this.depth = DEFAULT_DEPTH;
-  this.ignoreRelative = false;
-  this.userAgent = DEFAULT_USERAGENT;
-  this.maxConcurrentRequests = DEFAULT_MAX_CONCURRENT_REQUESTS;
-  this.maxRequestsPerSecond = DEFAULT_MAX_REQUESTS_PER_SECOND;
-  this.shouldCrawl = function(url) {
-    return true;
-  };
-  this.shouldCrawlLinksFrom = function(url) {
-    return true;
-  };
   //Urls that are queued for crawling, for some of them HTTP requests may not yet have been issued
   this._currentUrlsToCrawl = [];
+  this.configuration = new Configuration();
 }
 
 Crawler.prototype.configure = function(options) {
-  this.depth = (options && options.depth) || this.depth;
-  this.depth = Math.max(this.depth, 0);
-  this.ignoreRelative = (options && options.ignoreRelative) || this.ignoreRelative;
-  this.userAgent = (options && options.userAgent) || this.userAgent;
-  this.maxConcurrentRequests = (options && options.maxConcurrentRequests) || this.maxConcurrentRequests;
-  this.maxRequestsPerSecond = (options && options.maxRequestsPerSecond) || this.maxRequestsPerSecond;
-  this.shouldCrawl = (options && options.shouldCrawl) || this.shouldCrawl;
-  this.shouldCrawlLinksFrom = (options && options.shouldCrawlLinksFrom) || this.shouldCrawlLinksFrom;
-  this.onSuccess = _.noop;
-  this.onFailure = _.noop;
-  this.onAllFinished = _.noop;
+  this.configuration.configure(options);
   return this;
 };
 
 Crawler.prototype._createExecutor = function() {
   return new Executor({
-    maxRatePerSecond: this.maxRequestsPerSecond,
-    maxConcurrentTasks: this.maxConcurrentRequests
+    maxRatePerSecond: this.configuration.options.maxRequestsPerSecond,
+    maxConcurrentTasks: this.configuration.options.maxConcurrentRequests
   });
 };
 
-Crawler.prototype.crawl = function(url, onSuccess, onFailure, onAllFinished) {
+Crawler.prototype.crawl = function(urlOrOptions, onSuccess, onFailure, onAllFinished) {
   this.workExecutor = this._createExecutor();
   this.workExecutor.start();
-
-  if (typeof url !== 'string') {
-    var options = url;
-
-    onSuccess = options.success;
-    onFailure = options.failure;
-    onAllFinished = options.finished;
-    url = options.url;
-  }
-  this.onSuccess = onSuccess;
-  this.onFailure = onFailure;
-  this.onAllFinished = onAllFinished;
-  this._crawlUrl(url, null, this.depth);
-
+  const url = this.configuration.updateAndReturnUrl(urlOrOptions, onSuccess, onFailure, onAllFinished);
+  this._crawlUrl(url, null, this.configuration.options.depth);
   return this;
 };
 
@@ -105,14 +69,14 @@ Crawler.prototype._finishedCrawling = function(url) {
   this._currentUrlsToCrawl.splice(indexOfUrl, 1);
   if (this._currentUrlsToCrawl.length === 0) {
     //console.log("Crawling finished!");
-    this.onAllFinished && this.onAllFinished(this.crawledUrls);
-    this.workExecutor && this.workExecutor.stop();
+    this.configuration.options.onAllFinished(this.crawledUrls);
+    this.workExecutor.stop();
   }
 }
 
 Crawler.prototype._shouldSkip = function(url) {
   //console.log('Should skip? url = ', url, _.contains(_.keys(self.knownUrls), url) || !self.shouldCrawl(url));
-  var shouldCrawlUrl = this.shouldCrawl(url);
+  var shouldCrawlUrl = this.configuration.options.shouldCrawl(url);
   if (!shouldCrawlUrl) {
     this._finishedCrawling(url);
   }
@@ -140,7 +104,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
     const req = new Request({
       referer,
       url,
-      userAgent: this.userAgent
+      userAgent: this.configuration.options.userAgent
     });
     return req.submit().then((success: RequestSuccess) => {
       if (this.knownUrls[url]) {
@@ -153,8 +117,8 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
 
       const resp = new Response(success.response);
       const body = resp.getBody();
-      if (this.shouldCrawl(success.lastVisitedUrl)) {
-        this.onSuccess({
+      if (this.configuration.options.shouldCrawl(success.lastVisitedUrl)) {
+        this.configuration.options.onSuccess({
           url: success.lastVisitedUrl,
           status: success.response.statusCode,
           content: body,
@@ -165,11 +129,11 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
         });
         this.knownUrls[success.lastVisitedUrl] = true;
         this.crawledUrls.push(success.lastVisitedUrl);
-        if (this.shouldCrawlLinksFrom(success.lastVisitedUrl) && depth > 1 && resp.isTextHtml()) {
+        if (this.configuration.options.shouldCrawlLinksFrom(success.lastVisitedUrl) && depth > 1 && resp.isTextHtml()) {
           //TODO: If is not textContent just return the empty list of urls in the Response implementation
           const crawlOptions = {
-            ignoreRelative: this.ignoreRelative,
-            shouldCrawl: this.shouldCrawl
+            ignoreRelative: this.configuration.options.ignoreRelative,
+            shouldCrawl: this.configuration.options.shouldCrawl
           };
           this._crawlUrls(resp.getAllUrls(success.lastVisitedUrl, body, crawlOptions), success.lastVisitedUrl, depth - 1);
         }
@@ -177,7 +141,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
     }).catch((failure: RequestFailure) => {
       const resp = new Response(failure.response);
       const body = resp.getBody();
-      this.onFailure({
+      this.configuration.options.onFailure({
         url: url,
         status: failure.response ? failure.response.statusCode : undefined,
         content: body,
