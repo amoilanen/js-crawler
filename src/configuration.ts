@@ -16,7 +16,7 @@ export type onFailureCallback = (crawlingResult: UrlCrawlingResult) => void;
 export type onAllFinishedCallback = (crawledUrls: string[]) => void;
 
 
-export interface ConfigurationOptions {
+export interface CrawlingOptions {
   depth: number;
   ignoreRelative: boolean;
   userAgent: string;
@@ -24,10 +24,15 @@ export interface ConfigurationOptions {
   maxRequestsPerSecond: number;
   shouldCrawl: (url: string) => boolean;
   shouldCrawlLinksFrom: (url: string) => boolean;
+}
+
+export interface CrawlingCallbacks {
   onSuccess: onSuccessCallback;
   onFailure: onFailureCallback;
   onAllFinished: onAllFinishedCallback;
 }
+
+export type ConfigurationOptions = CrawlingOptions & CrawlingCallbacks;
 
 export interface CrawlOptions {
   success: onSuccessCallback;
@@ -63,7 +68,19 @@ export default class Configuration {
     this.options.depth = Math.max(this.options.depth, 0);
   }
 
-  updateAndReturnUrl(urlOrOptions: CrawlOptions | string,
+  get crawlingOptions(): CrawlingOptions {
+    return _.pick(this.options, [
+      'depth', 'ignoreRelative', 'userAgent', 'maxConcurrentRequests', 'maxRequestsPerSecond', 'shouldCrawl', 'shouldCrawlLinksFrom'
+    ]);
+  }
+
+  get crawlingCallbacks(): CrawlingCallbacks {
+    return _.pick(this.options, [
+      'onSuccess', 'onFailure', 'onAllFinished'
+    ]);
+  }
+
+  updateAndReturnUrl(urlOrOptions: CrawlOptions & { url: string} | string,
       onSuccess?: onSuccessCallback,
       onFailure?: onFailureCallback,
       onAllFinished?: onAllFinishedCallback) {
