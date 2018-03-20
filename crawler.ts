@@ -32,8 +32,8 @@ Crawler.prototype.configure = function(options) {
 
 Crawler.prototype._createExecutor = function() {
   return new Executor({
-    maxRatePerSecond: this.configuration.crawlingOptions.maxRequestsPerSecond,
-    maxConcurrentTasks: this.configuration.crawlingOptions.maxConcurrentRequests
+    maxRatePerSecond: this.configuration.options.maxRequestsPerSecond,
+    maxConcurrentTasks: this.configuration.options.maxConcurrentRequests
   });
 };
 
@@ -41,7 +41,7 @@ Crawler.prototype.crawl = function(urlOrOptions, onSuccess, onFailure, onAllFini
   this.workExecutor = this._createExecutor();
   this.workExecutor.start();
   const url = this.configuration.updateAndReturnUrl(urlOrOptions, onSuccess, onFailure, onAllFinished);
-  this._crawlUrl(url, null, this.configuration.crawlingOptions.depth);
+  this._crawlUrl(url, null, this.configuration.options.depth);
   return this;
 };
 
@@ -69,14 +69,14 @@ Crawler.prototype._finishedCrawling = function(url) {
   this._currentUrlsToCrawl.splice(indexOfUrl, 1);
   if (this._currentUrlsToCrawl.length === 0) {
     //console.log("Crawling finished!");
-    this.configuration.crawlingCallbacks.onAllFinished(this.crawledUrls);
+    this.configuration.callbacks.finished(this.crawledUrls);
     this.workExecutor.stop();
   }
 }
 
 Crawler.prototype._shouldSkip = function(url) {
   //console.log('Should skip? url = ', url, _.contains(_.keys(self.knownUrls), url) || !self.shouldCrawl(url));
-  var shouldCrawlUrl = this.configuration.crawlingOptions.shouldCrawl(url);
+  var shouldCrawlUrl = this.configuration.options.shouldCrawl(url);
   if (!shouldCrawlUrl) {
     this._finishedCrawling(url);
   }
@@ -104,7 +104,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
     const req = new Request({
       referer,
       url,
-      userAgent: this.configuration.crawlingOptions.userAgent
+      userAgent: this.configuration.options.userAgent
     });
     return req.submit().then((success: RequestSuccess) => {
       if (this.knownUrls[url]) {
@@ -117,8 +117,8 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
 
       const resp = new Response(success.response);
       const body = resp.getBody();
-      if (this.configuration.crawlingOptions.shouldCrawl(success.lastVisitedUrl)) {
-        this.configuration.crawlingCallbacks.onSuccess({
+      if (this.configuration.options.shouldCrawl(success.lastVisitedUrl)) {
+        this.configuration.callbacks.success({
           url: success.lastVisitedUrl,
           status: success.response.statusCode,
           content: body,
@@ -129,11 +129,11 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
         });
         this.knownUrls[success.lastVisitedUrl] = true;
         this.crawledUrls.push(success.lastVisitedUrl);
-        if (this.configuration.crawlingOptions.shouldCrawlLinksFrom(success.lastVisitedUrl) && depth > 1 && resp.isTextHtml()) {
+        if (this.configuration.options.shouldCrawlLinksFrom(success.lastVisitedUrl) && depth > 1 && resp.isTextHtml()) {
           //TODO: If is not textContent just return the empty list of urls in the Response implementation
           const crawlOptions = {
-            ignoreRelative: this.configuration.crawlingOptions.ignoreRelative,
-            shouldCrawl: this.configuration.crawlingOptions.shouldCrawl
+            ignoreRelative: this.configuration.options.ignoreRelative,
+            shouldCrawl: this.configuration.options.shouldCrawl
           };
           this._crawlUrls(resp.getAllUrls(success.lastVisitedUrl, body, crawlOptions), success.lastVisitedUrl, depth - 1);
         }
@@ -141,7 +141,7 @@ Crawler.prototype._crawlUrl = function(url, referer, depth) {
     }).catch((failure: RequestFailure) => {
       const resp = new Response(failure.response);
       const body = resp.getBody();
-      this.configuration.crawlingCallbacks.onFailure({
+      this.configuration.callbacks.failure({
         url: url,
         status: failure.response ? failure.response.statusCode : undefined,
         content: body,

@@ -11,12 +11,11 @@ export interface UrlCrawlingResult {
   referer: string
 }
 
-export type onSuccessCallback = (crawlingResult: UrlCrawlingResult) => void;
-export type onFailureCallback = (crawlingResult: UrlCrawlingResult) => void;
-export type onAllFinishedCallback = (crawledUrls: string[]) => void;
+export type successCallback = (crawlingResult: UrlCrawlingResult) => void;
+export type failureCallback = (crawlingResult: UrlCrawlingResult) => void;
+export type finishedCallback = (crawledUrls: string[]) => void;
 
-
-export interface CrawlingOptions {
+export interface CrawlOptions {
   depth: number;
   ignoreRelative: boolean;
   userAgent: string;
@@ -26,20 +25,13 @@ export interface CrawlingOptions {
   shouldCrawlLinksFrom: (url: string) => boolean;
 }
 
-export interface CrawlingCallbacks {
-  onSuccess: onSuccessCallback;
-  onFailure: onFailureCallback;
-  onAllFinished: onAllFinishedCallback;
+export interface CrawlCallbacks {
+  success: successCallback;
+  failure: failureCallback;
+  finished: finishedCallback;
 }
 
-export type ConfigurationOptions = CrawlingOptions & CrawlingCallbacks;
-
-export interface CrawlOptions {
-  success: onSuccessCallback;
-  failure: onFailureCallback;
-  finished: onAllFinishedCallback;
-  url: string;
-}
+export type ConfigurationOptions = CrawlOptions & CrawlCallbacks;
 
 const DEFAULT_DEPTH = 2;
 const DEFAULT_MAX_CONCURRENT_REQUESTS = 10;
@@ -54,53 +46,48 @@ const DEFAULT_OPTIONS: ConfigurationOptions = {
   maxRequestsPerSecond: DEFAULT_MAX_REQUESTS_PER_SECOND,
   shouldCrawl: url => true,
   shouldCrawlLinksFrom: url => true,
-  onSuccess: _.noop,
-  onFailure: _.noop,
-  onAllFinished: _.noop
+  success: _.noop,
+  failure: _.noop,
+  finished: _.noop
 };
 
 export default class Configuration {
 
-  options: ConfigurationOptions;
+  config: ConfigurationOptions;
 
   configure(options: ConfigurationOptions) {
-    this.options = Object.assign({}, DEFAULT_OPTIONS, options);
-    this.options.depth = Math.max(this.options.depth, 0);
+    this.config = Object.assign({}, DEFAULT_OPTIONS, options);
+    this.config.depth = Math.max(this.config.depth, 0);
   }
 
-  get crawlingOptions(): CrawlingOptions {
-    return _.pick(this.options, [
+  get options(): CrawlOptions {
+    return _.pick(this.config, [
       'depth', 'ignoreRelative', 'userAgent', 'maxConcurrentRequests', 'maxRequestsPerSecond', 'shouldCrawl', 'shouldCrawlLinksFrom'
     ]);
   }
 
-  get crawlingCallbacks(): CrawlingCallbacks {
-    return _.pick(this.options, [
-      'onSuccess', 'onFailure', 'onAllFinished'
+  get callbacks(): CrawlCallbacks {
+    return _.pick(this.config, [
+      'success', 'failure', 'finished'
     ]);
   }
 
-  updateAndReturnUrl(urlOrOptions: CrawlOptions & { url: string} | string,
-      onSuccess?: onSuccessCallback,
-      onFailure?: onFailureCallback,
-      onAllFinished?: onAllFinishedCallback) {
+  updateAndReturnUrl(urlOrOptions: CrawlCallbacks & { url: string} | string,
+      success?: successCallback,
+      failure?: failureCallback,
+      finished?: finishedCallback) {
     if (typeof urlOrOptions !== 'string') {
-      const options: CrawlOptions = urlOrOptions;
-      const optionsUpdate = {
-        onSuccess: options.success || _.noop,
-        onFailure: options.failure || _.noop,
-        onAllFinished: options.finished || _.noop
-      };
-      this.options = Object.assign({}, this.options, optionsUpdate);
+      const options: CrawlCallbacks = urlOrOptions;
+      this.config = Object.assign({}, this.config, options);
       return urlOrOptions.url;
     } else {
       const url = urlOrOptions;
       const optionsUpdate = {
-        onSuccess: onSuccess || _.noop,
-        onFailure: onFailure || _.noop,
-        onAllFinished: onAllFinished || _.noop
+        success: success || _.noop,
+        failure: failure || _.noop,
+        finished: finished || _.noop
       };
-      this.options = Object.assign({}, this.options, optionsUpdate);
+      this.config = Object.assign({}, this.config, optionsUpdate);
       return url;
     }
   }
