@@ -50,7 +50,7 @@ Crawler.prototype._shouldSkip = function(url) {
 Crawler.prototype._crawlUrl = function(url, referer, depth) {
 
   //console.log('_crawlUrl: url = %s, depth = %s', url, depth);
-  if ((depth === 0) || !this.state.isNewUrl(url)) {
+  if ((depth === 0) || this.state.isVisitedUrl(url) || this.state.isBeingCrawled(url)) {
     return;
   }
   this.state.startedCrawling(url);

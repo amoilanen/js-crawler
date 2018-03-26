@@ -7,72 +7,70 @@ export interface StateChangeCallbacks {
 export default class State {
 
   /*
-   * Urls that the Crawler has visited, as some pages may be in the middle of a redirect chain, not all the knownUrls will be actually
+   * Urls that the Crawler has visited, as some pages may be in the middle of a redirect chain, not all the visitedUrls will be actually
    * reported in the onSuccess or onFailure callbacks, only the final urls in the corresponding redirect chains
    */
-  knownUrls: {[url: string]: boolean}
+  visitedUrls: {[url: string]: boolean}
 
   /*
-   * Urls that were reported in the onSuccess or onFailure callbacks. this.crawledUrls is a subset of this.knownUrls, and matches it
+   * Urls that were reported in the onSuccess or onFailure callbacks. this.crawledUrls is a subset of this.visitedUrls, and matches it
    * iff there were no redirects while crawling.
    */
-  crawledUrls: string[]
+  crawledUrls: {[url: string]: boolean}
 
   /*
    * Urls that are queued for crawling, for some of them HTTP requests may not yet have been issued
    */
-  _currentUrlsToCrawl: string[]
+  beingCrawledUrls: string[]
 
   callbacks: StateChangeCallbacks
 
   constructor(callbacks: StateChangeCallbacks) {
     this.callbacks = callbacks;
-    this.knownUrls = {};
-    this.crawledUrls = [];
-    this._currentUrlsToCrawl = [];
+    this.clear();
   }
 
   clear() {
-    this.knownUrls = {};
-    this.crawledUrls = [];
-    this._currentUrlsToCrawl = [];
+    this.visitedUrls = {};
+    this.crawledUrls = {};
+    this.beingCrawledUrls = [];
     return this;
   }
 
   startedCrawling(url: string) {
-    if (this._currentUrlsToCrawl.indexOf(url) < 0) {
-      this._currentUrlsToCrawl.push(url);
+    if (this.beingCrawledUrls.indexOf(url) < 0) {
+      this.beingCrawledUrls.push(url);
     }
   }
 
   addVisitedUrls(urls: string[]) {
     urls.forEach(url => {
-      this.knownUrls[url] = true;
+      this.visitedUrls[url] = true;
     });
   }
 
   addCrawledUrl(url: string) {
-    this.knownUrls[url] = true;
-    this.crawledUrls.push(url);
+    this.visitedUrls[url] = true;
+    this.crawledUrls[url] = true;
   }
 
-  isNewUrl(url: string) {
-    return !_.contains(this._currentUrlsToCrawl, url) && !_.contains(_.keys(this.knownUrls), url);
+  isBeingCrawled(url: string) {
+    return _.contains(this.beingCrawledUrls, url);
   }
 
-  isVisitedUrl(url: string) {
-    return _.contains(_.keys(this.knownUrls), url);
+  isVisitedUrl(url: string): boolean {
+    return Boolean(this.visitedUrls[url]);
   }
 
   finishedCrawling(url: string) {
     //console.log("Finished crawling url = ", url);
-    //console.log("_currentUrlsToCrawl = ", this._currentUrlsToCrawl);
-    const indexOfUrl = this._currentUrlsToCrawl.indexOf(url);
+    //console.log("beingCrawledUrls = ", this.beingCrawledUrls);
+    const indexOfUrl = this.beingCrawledUrls.indexOf(url);
   
-    this._currentUrlsToCrawl.splice(indexOfUrl, 1);
-    if (this._currentUrlsToCrawl.length === 0) {
+    this.beingCrawledUrls.splice(indexOfUrl, 1);
+    if (this.beingCrawledUrls.length === 0) {
       //console.log("Crawling finished!");
-      this.callbacks.onCrawlingFinished(this.crawledUrls);
+      this.callbacks.onCrawlingFinished(_.keys(this.crawledUrls));
     }
   }
 }
