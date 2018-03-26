@@ -11,9 +11,9 @@ export interface UrlCrawlingResult {
   referer: string
 }
 
-export type successCallback = (crawlingResult: UrlCrawlingResult) => void;
-export type failureCallback = (crawlingResult: UrlCrawlingResult) => void;
-export type finishedCallback = (crawledUrls: string[]) => void;
+export type SuccessCallback = (crawlingResult: UrlCrawlingResult) => void;
+export type FailureCallback = (crawlingResult: UrlCrawlingResult) => void;
+export type FinishedCallback = (crawledUrls: string[]) => void;
 
 export interface CrawlOptions {
   depth: number;
@@ -26,9 +26,9 @@ export interface CrawlOptions {
 }
 
 export interface CrawlCallbacks {
-  success: successCallback;
-  failure: failureCallback;
-  finished: finishedCallback;
+  success: SuccessCallback;
+  failure: FailureCallback;
+  finished: FinishedCallback;
 }
 
 export type ConfigurationOptions = CrawlOptions & CrawlCallbacks;
@@ -73,9 +73,9 @@ export default class Configuration {
   }
 
   updateAndReturnUrl(urlOrOptions: CrawlCallbacks & { url: string} | string,
-      success?: successCallback,
-      failure?: failureCallback,
-      finished?: finishedCallback) {
+      success?: SuccessCallback,
+      failure?: FailureCallback,
+      finished?: FinishedCallback) {
     if (typeof urlOrOptions !== 'string') {
       const options: CrawlCallbacks = urlOrOptions;
       this.config = Object.assign({}, this.config, options);

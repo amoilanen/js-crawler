@@ -1,7 +1,7 @@
 import { resolve as urlResolve } from 'url';
 import * as _ from 'underscore';
 
-export interface CrawlOptions {
+export interface GetUrlsBehavior {
   ignoreRelative: boolean;
   shouldCrawl: (link: string) => boolean
 }
@@ -81,10 +81,10 @@ export default class Response {
       || link.indexOf('http://') >= 0 || link.indexOf('https://') >= 0;
   }
 
-  getAllUrls(defaultBaseUrl: string, body: string, options: CrawlOptions): string[] {
+  getAllUrls(defaultBaseUrl: string, body: string, behavior: GetUrlsBehavior): string[] {
     body = this.stripComments(body);
     const baseUrl = this.getBaseUrl(defaultBaseUrl, body);
-    const linksRegex = options.ignoreRelative ? /<a[^>]+?href=["'].*?:\/\/.*?["']/gmi : /<a[^>]+?href=["'].*?["']/gmi;
+    const linksRegex = behavior.ignoreRelative ? /<a[^>]+?href=["'].*?:\/\/.*?["']/gmi : /<a[^>]+?href=["'].*?["']/gmi;
     const links = body.match(linksRegex) || [];
 
     //console.log('body = ', body);
@@ -98,7 +98,7 @@ export default class Response {
       })
       .uniq()
       .filter(link => {
-        return this.isLinkProtocolSupported(link) && options.shouldCrawl(link);
+        return this.isLinkProtocolSupported(link) && behavior.shouldCrawl(link);
       })
       .value();
 

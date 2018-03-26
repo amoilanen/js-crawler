@@ -101,7 +101,7 @@ describe('crawler', function() {
         },
         function onAllFinished(crawledUrls) {
           expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
-          expect(Object.keys(crawler.state.knownUrls).sort()).toEqual(expectedKnownUrls.sort());
+          expect(Object.keys(crawler.state.visitedUrls).sort()).toEqual(expectedKnownUrls.sort());
           done();
         }
       );

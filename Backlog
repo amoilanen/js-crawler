@@ -17,6 +17,7 @@
   -- Source map support
 
 - Add support for other request engines: headless Chrome, make it configurable
+- Provide additional reactive-like API for crawler (rx.js), naturally urls being crawled form a stream of data?
 
 - Enable debugging, when crawler is passed debug: true option log information about crawled urls, content etc.?
 
