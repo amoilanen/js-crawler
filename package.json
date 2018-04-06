@@ -32,7 +32,7 @@
     "karma-webpack": "^2.0.9",
     "phantomjs": "^2.1.7",
     "source-map-loader": "^0.2.3",
-    "typescript": "^2.7.2",
+    "typescript": "^2.8.1",
     "webpack": "^4.1.0"
   },
   "scripts": {
