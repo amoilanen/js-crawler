@@ -5,7 +5,7 @@ module.exports = function(config) {
     files: [
       'spec/index.ts'
     ],
-    frameworks: [ 'jasmine'],
+    frameworks: [ 'mocha', 'chai' ],
     preprocessors: {
       'spec/*.ts': [ 'webpack' ]
     },
@@ -36,10 +36,15 @@ module.exports = function(config) {
 
   if (config.tdd) {
     configuration = Object.assign(configuration, {
-      reporters: ['spec', 'kjhtml'],
+      reporters: ['spec'],
       autoWatch: true,
       singleRun: false,
-      browsers: [ 'Chrome' ]
+      browsers: [ 'Chrome' ],
+      client: {
+        mocha: {
+          reporter: 'html'
+        }
+      }
     });
   }
 
