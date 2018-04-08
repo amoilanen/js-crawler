@@ -28,7 +28,7 @@ module.exports = function(config) {
     },
     autoWatch: false,
     singleRun: true,
-    browsers: [ 'PhantomJS' ],
+    browsers: [ 'ChromeHeadless' ],
     mime: {
       'text/x-typescript': ['ts']
     }

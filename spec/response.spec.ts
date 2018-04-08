@@ -7,7 +7,7 @@ function getRecordedCallArguments(spyObj, methodName) {
   });
 }
 
-describe('crawler', function() {
+describe('response', function() {
 
   var response;
 
@@ -132,7 +132,7 @@ Link c\
     describe('shouldCrawl option', function() {
 
       it('should filter urls based on shouldCrawl', function() {
-        const crawlOptions = {
+        var crawlOptions = {
           shouldCrawl: function isOddResource(url) {
             var resourceId = parseInt(url.substring(url.lastIndexOf('/') + 1));
 

@@ -11,6 +11,6 @@
     "module": "commonjs"
   },
   "include": [
-    "crawler.ts", "src/**/*.ts"
+    "crawler.ts", "src/**/*.ts", "spec/**/*.ts"
   ]
 }
