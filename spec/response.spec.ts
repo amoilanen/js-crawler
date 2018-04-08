@@ -16,6 +16,25 @@ describe('response', () => {
     response = new Response(null);
   });
 
+  describe('checking if url protocol is supported', () => {
+
+    it('should not support ftp', () => {
+      expect(response.isUrlProtocolSupported('ftp://someftplink')).to.be.false;
+    });
+
+    it('should not support mailto', () => {
+      expect(response.isUrlProtocolSupported('mailto:someone@somewhere.com')).to.be.false;
+    });
+
+    it('should support http', () => {
+      expect(response.isUrlProtocolSupported('http://somehttplink')).to.be.true;
+    });
+
+    it('should support https', () => {
+      expect(response.isUrlProtocolSupported('https://somehttplink')).to.be.true;
+    });
+  });
+
   describe('html comments', () => {
 
     it('should strip when present', () => {

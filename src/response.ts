@@ -76,9 +76,8 @@ export default class Response {
     return urlResolve(defaultBaseUrl, baseUrlInPage[1]);
   };
 
-  isLinkProtocolSupported(link: string): boolean {
-    return (link.indexOf('://') < 0 && link.indexOf('mailto:') < 0)
-      || link.indexOf('http://') >= 0 || link.indexOf('https://') >= 0;
+  isUrlProtocolSupported(link: string): boolean {
+    return link.startsWith('http://') || link.startsWith('https://');
   }
 
   getAllUrls(defaultBaseUrl: string, body: string, behavior: GetUrlsBehavior): string[] {
@@ -98,7 +97,7 @@ export default class Response {
       })
       .uniq()
       .filter(link => {
-        return this.isLinkProtocolSupported(link) && behavior.shouldCrawl(link);
+        return this.isUrlProtocolSupported(link) && behavior.shouldCrawl(link);
       })
       .value();
 
