@@ -2,7 +2,7 @@ import { resolve as urlResolve } from 'url';
 import * as _ from 'underscore';
 
 export interface GetUrlsBehavior {
-  ignoreRelative: boolean;
+  ignoreRelative?: boolean;
   shouldCrawl: (link: string) => boolean
 }
 

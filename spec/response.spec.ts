@@ -1,30 +1,24 @@
 import Response from '../src/response';
-var _ = require('underscore');
+const _ = require('underscore');
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 
-function getRecordedCallArguments(spyObj, methodName) {
-  return spyObj[methodName].calls.all().map(function(call) {
-    return call.args;
-  });
-}
+describe('response', () => {
 
-describe('response', function() {
+  let response: Response;
 
-  var response;
-
-  var crawlOptions = {
+  const crawlOptions = {
     ignoreRelative: false,
     shouldCrawl: () => true
   };
 
-  beforeEach(function() {
+  beforeEach(() => {
     response = new Response(null);
   });
 
-  describe('html comments', function() {
+  describe('html comments', () => {
 
-    it('should strip when present', function() {
+    it('should strip when present', () => {
       expect(response.stripComments(
         '<html><!--comment1--><body><!--comment2--></body></html>'
       )).to.eql(
@@ -32,7 +26,7 @@ describe('response', function() {
       );
     });
 
-    it('should make no changes to html with no comments', function() {
+    it('should make no changes to html with no comments', () => {
       expect(response.stripComments(
         '<div id="someDiv"></div>'
       )).to.eql(
@@ -41,24 +35,24 @@ describe('response', function() {
     });
   });
 
-  describe('getting urls from fragment', function() {
+  describe('getting urls from fragment', () => {
 
-    var baseUrl = 'http://localhost:8080/basePath';
+    const baseUrl = 'http://localhost:8080/basePath';
 
-    it('should get a relative url from fragment', function() {
+    it('should get a relative url from fragment', () => {
       expect(response.getAllUrls(baseUrl, '<a href="somePath/resource1"></a>', crawlOptions))
         .to.eql(['http://localhost:8080/somePath/resource1']);
     });
 
-    it('should get several urls from fragment', function() {
-      var fragment = '\
-Link a\
-<a href="a"></a>\
-Link b\
-<a href="b"></a>\
-Link c\
-<a href="c"></a>\
-';
+    it('should get several urls from fragment', () => {
+      const fragment = `
+Link a
+<a href="a"></a>
+Link b
+<a href="b"></a>
+Link c
+<a href="c"></a>
+`;
 
       expect(response.getAllUrls(baseUrl, fragment, crawlOptions))
         .to.eql([
@@ -68,86 +62,86 @@ Link c\
         ]);
     });
 
-    it('should get absolute url from fragment', function() {
+    it('should get absolute url from fragment', () => {
       expect(response.getAllUrls(baseUrl, '<a href="http://someotherhost/resource"></a>', crawlOptions))
         .to.eql(['http://someotherhost/resource']);
     });
 
-    it('should ignore mailto links', function() {
+    it('should ignore mailto links', () => {
       expect(response.getAllUrls(baseUrl, '<a href="mailto:someone@somewhere.com"></a>', crawlOptions))
         .to.eql([]);
     });
 
-    it('should ignore ftp links', function() {
+    it('should ignore ftp links', () => {
       expect(response.getAllUrls(baseUrl, '<a href="ftp://myserver.org"></a>', crawlOptions))
         .to.eql([]);
     });
     
-    it('should work with single or double quoted attribute values', function() {
+    it('should work with single or double quoted attribute values', () => {
       expect(response.getAllUrls(baseUrl, '<a href="http://doublequoted.org"></a>'+"<a href='http://singlequoted.org'></a>", crawlOptions))
         .to.eql(['http://doublequoted.org/','http://singlequoted.org/']);
     });
 
-    describe('ignoreRelative option', function() {
+    describe('ignoreRelative option', () => {
 
-      var crawlOptions = {
+      const crawlOptions = {
         ignoreRelative: true,
         shouldCrawl: () => true
       };
 
-      describe('enabled', function() {
+      describe('enabled', () => {
 
-        it('should ignore relative urls', function() {
+        it('should ignore relative urls', () => {
           expect(response.getAllUrls(baseUrl, '<a href="/resource"></a>', crawlOptions)).to.eql([]);
         });
 
-        it('should not ignore absolute urls', function() {
+        it('should not ignore absolute urls', () => {
           expect(response.getAllUrls(baseUrl, '<a href="http://localhost/resource"></a>', crawlOptions))
             .to.eql(['http://localhost/resource']);
         });
       });
 
-      describe('disabled', function() {
+      describe('disabled', () => {
 
-        var crawlOptions = {
+        const crawlOptions = {
           ignoreRelative: false,
           shouldCrawl: () => true
         };
 
-        it('should not ignore relative urls', function() {
+        it('should not ignore relative urls', () => {
           expect(response.getAllUrls(baseUrl, '<a href="/resource"></a>', crawlOptions))
             .to.eql(['http://localhost:8080/resource']);
         });
 
-        it('should not ignore absolute urls', function() {
+        it('should not ignore absolute urls', () => {
           expect(response.getAllUrls(baseUrl, '<a href="http://localhost/resource"></a>', crawlOptions))
             .to.eql(['http://localhost/resource']);
         });
       });
     });
 
-    it('should ignore links in the comments', function() {
+    it('should ignore links in the comments', () => {
       expect(response.getAllUrls(baseUrl, '<!--<a href="http://localhost/resource"></a>-->', crawlOptions))
         .to.eql([]);
     });
 
-    describe('shouldCrawl option', function() {
+    describe('shouldCrawl option', () => {
 
-      it('should filter urls based on shouldCrawl', function() {
-        var crawlOptions = {
-          shouldCrawl: function isOddResource(url) {
-            var resourceId = parseInt(url.substring(url.lastIndexOf('/') + 1));
+      it('should filter urls based on shouldCrawl', () => {
+        const crawlOptions = {
+          shouldCrawl: url => {
+            const resourceId = parseInt(url.substring(url.lastIndexOf('/') + 1));
 
             return resourceId % 2 === 0;
           }
         };
 
-        var fragment = '<a href="/resource/1"></a>\
-<a href="/resource/2"></a>\
-<a href="/resource/3"></a>\
-<a href="/resource/4"></a>\
-<a href="/resource/5"></a>\
-';
+        const fragment = `<a href="/resource/1"></a>
+<a href="/resource/2"></a>
+<a href="/resource/3"></a>
+<a href="/resource/4"></a>
+<a href="/resource/5"></a>
+`;
 
         expect(response.getAllUrls(baseUrl, fragment, crawlOptions))
           .to.eql([
@@ -157,17 +151,16 @@ Link c\
       });
     });
 
-    describe('base url specified in HTML', function() {
+    describe('base url specified in HTML', () => {
+      const defaultBaseUrl = 'http://localhost:8080/defaultbase/';
+      const specifiedAbsoluteBaseUrl = 'http://localhost:8080/specifiedabsolutebase/';
+      const specifiedRelativeBaseUrl = 'specifiedrelativebase/';
 
-      var defaultBaseUrl = 'http://localhost:8080/defaultbase/';
-      var specifiedAbsoluteBaseUrl = 'http://localhost:8080/specifiedabsolutebase/';
-      var specifiedRelativeBaseUrl = 'specifiedrelativebase/';
-
-      it('should resolve relative urls using base url', function() {
-        var fragment = '<base href="' +specifiedAbsoluteBaseUrl + '">\
-<a href="resource/1"></a>\
-<a href="resource/2"></a>\
-<a href="resource/3"></a>';
+      it('should resolve relative urls using base url', () => {
+        const fragment = `<base href="${specifiedAbsoluteBaseUrl}">\
+<a href="resource/1"></a>
+<a href="resource/2"></a>
+<a href="resource/3"></a>`;
 
         expect(response.getAllUrls(defaultBaseUrl, fragment, crawlOptions))
           .to.eql([
@@ -177,9 +170,9 @@ Link c\
           ]);
       });
 
-      it('should resolve absolute urls to themselves', function() {
-        var fragment = '<base href="' +specifiedAbsoluteBaseUrl + '">\
-<a href="/resource/1"></a>';
+      it('should resolve absolute urls to themselves', () => {
+        const fragment = `<base href="${specifiedAbsoluteBaseUrl}">
+<a href="/resource/1"></a>`;
 
         expect(response.getAllUrls(defaultBaseUrl, fragment, crawlOptions))
           .to.eql([
@@ -187,9 +180,9 @@ Link c\
           ]);
       });
 
-      it('should resolve relative urls with relative base url specified', function() {
-        var fragment = '<base href="' +specifiedRelativeBaseUrl + '">\
-<a href="resource/1"></a>';
+      it('should resolve relative urls with relative base url specified', () => {
+        const fragment = `<base href="${specifiedRelativeBaseUrl}">
+<a href="resource/1"></a>`;
 
         expect(response.getAllUrls(defaultBaseUrl, fragment, crawlOptions))
           .to.eql([
@@ -199,18 +192,18 @@ Link c\
     });
   });
 
-  describe('content encoding', function () {
+  describe('content encoding', () => {
 
-    var decodedBody = 'Decoded body';
-    var url = 'someUrl';
-    var OK = 200;
-    var body: any = 'Some next urls\
-<a href="url1"></a>\
-<a href="url2"></a>\
-<a href="url3"></a>';
-    var httpResponse;
+    const decodedBody = 'Decoded body';
+    const url = 'someUrl';
+    const OK = 200;
+    const body = `Some next urls
+<a href="url1"></a>
+<a href="url2"></a>
+<a href="url3"></a>`;
+    let httpResponse;
 
-    beforeEach(function () {
+    beforeEach(() => {
       httpResponse = {
         statusCode: OK,
         headers: {
@@ -230,12 +223,12 @@ Link c\
       response = new Response(httpResponse);
     });
 
-    it('if no header provided, utf8 is used by default', function () {
+    it('if no header provided, utf8 is used by default', () => {
       response.getBody();
       expect(httpResponse.body.toString.calledWith('utf8')).to.be.true;
     });
 
-    it('if header provided, it is used', function () {
+    it('if header provided, it is used', () => {
       httpResponse.headers['content-encoding'] = 'gzip';
       response.getBody();
       expect(httpResponse.body.toString.calledWith('gzip')).to.be.true;
@@ -245,13 +238,13 @@ Link c\
       expect(response.isTextHtml()).to.eql(true);
     })
 
-    it('if response is not defined, content is not considered to be text', function () {
+    it('if response is not defined, content is not considered to be text', () => {
       response = new Response(undefined);
       expect(response.isTextHtml()).to.eql(false);
     });
 
-    it('if invalid encoding is specified, default encoding will be used', function () {
-      httpResponse.body.toString.callsFake(function (encoding) {
+    it('if invalid encoding is specified, default encoding will be used', () => {
+      httpResponse.body.toString.callsFake(encoding => {
         if (encoding !== 'utf8') {
           throw new Error('Unknown encoding ' + encoding);
         }
