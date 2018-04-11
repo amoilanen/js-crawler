@@ -1,7 +1,7 @@
 import * as _ from 'underscore';
 import Executor from './src/executor';
 import Request, {RequestSuccess, RequestFailure} from './src/request';
-import Response, { GetUrlsBehavior } from './src/response';
+import Response, { UrlCrawlingBehavior } from './src/response';
 import Configuration,
   { ConfigurationOptions, CrawlCallbacks, SuccessCallback,
     FailureCallback, FinishedCallback } from './src/configuration';

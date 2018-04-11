@@ -1,18 +1,20 @@
-import { resolve as urlResolve } from 'url';
+import { resolve } from 'url';
 import * as _ from 'underscore';
 
-export interface GetUrlsBehavior {
+export interface UrlCrawlingBehavior {
   ignoreRelative?: boolean;
   shouldCrawl: (link: string) => boolean
+}
+
+export interface Decodable {
+  toString(encoding: string): string
 }
 
 export interface HttpResponse {
   headers: {
     [headerName: string]: string
   },
-  body: {
-    toString(encoding: string): string
-  },
+  body: Decodable,
   statusCode: number,
   request: {
     uri: {
@@ -20,6 +22,8 @@ export interface HttpResponse {
     }
   }
 }
+
+const BODY_PLACEHOLDER: string = '<<...non-text content (omitted by js-crawler)...>>'
 
 export default class Response {
   response: HttpResponse
@@ -30,38 +34,41 @@ export default class Response {
 
   isTextHtml(): boolean {
     const { response } = this;
+    const isContentTypeHeaderDefined = Boolean(response && response.headers && response.headers['content-type']);
 
-    return Boolean(response && response.headers && response.headers['content-type']
-      && response.headers['content-type'].match(/^text\/html.*$/));
+    return isContentTypeHeaderDefined && response.headers['content-type'].startsWith('text/html');
   }
 
-  getBody(): string {
-    if (!this.isTextHtml()) {
-      return '<<...binary content (omitted by js-crawler)...>>';
-    }
-
-    const { response } = this;
+  decode(encoded: Decodable, encoding: string): string {
     const defaultEncoding = 'utf8';
-    let encoding = defaultEncoding;
-
-    if (response.headers['content-encoding']) {
-      encoding = response.headers['content-encoding'];
+    if (!encoding) {
+      encoding = defaultEncoding;
     }
 
     let decodedBody: string;
     try {
-      decodedBody = response.body.toString(encoding);
+      decodedBody = encoded.toString(encoding);
     } catch (decodingError) {
-      decodedBody = response.body.toString(defaultEncoding);
+      decodedBody = encoded.toString(defaultEncoding);
     }
     return decodedBody;
+  }
+
+  getBody(): string {
+    if (!this.isTextHtml()) {
+      return BODY_PLACEHOLDER;
+    }
+    const { response } = this;
+    const encoding = response.headers['content-encoding'];
+
+    return this.decode(response.body, encoding);
   }
 
   stripComments(str: string): string {
     return str.replace(/<!--.*?-->/g, '');
   }
 
-  getBaseUrl(defaultBaseUrl: string, body: string): string {
+  getBaseUrl(responseUrl: string, body: string): string {
 
     /*
      * Resolving the base url following
@@ -70,35 +77,38 @@ export default class Response {
     const baseUrlRegex = /<base href="(.*?)">/;
     const baseUrlInPage = body.match(baseUrlRegex);
     if (!baseUrlInPage) {
-      return defaultBaseUrl;
+      return responseUrl;
     }
+    const baseUrl = baseUrlInPage[1];
 
-    return urlResolve(defaultBaseUrl, baseUrlInPage[1]);
+    return resolve(responseUrl, baseUrl);
   };
 
   isUrlProtocolSupported(link: string): boolean {
     return link.startsWith('http://') || link.startsWith('https://');
   }
 
-  getAllUrls(defaultBaseUrl: string, body: string, behavior: GetUrlsBehavior): string[] {
+  getHrefFrom(linkHtml: string): string {
+    const match = /href=[\"\'](.*?)[#\"\']/i.exec(linkHtml);
+
+    return match[1];
+  }
+
+  getAllUrls(responseUrl: string, body: string, behavior: UrlCrawlingBehavior): string[] {
     body = this.stripComments(body);
-    const baseUrl = this.getBaseUrl(defaultBaseUrl, body);
+    const baseUrl = this.getBaseUrl(responseUrl, body);
     const linksRegex = behavior.ignoreRelative ? /<a[^>]+?href=["'].*?:\/\/.*?["']/gmi : /<a[^>]+?href=["'].*?["']/gmi;
     const links = body.match(linksRegex) || [];
 
     //console.log('body = ', body);
     const urls = _.chain(links)
-      .map(function(link) {
-        const match = /href=[\"\'](.*?)[#\"\']/i.exec(link);
-
-        link = match[1];
-        link = urlResolve(baseUrl, link);
-        return link;
-      })
+      .map(link =>
+        resolve(baseUrl, this.getHrefFrom(link))
+      )
       .uniq()
-      .filter(link => {
-        return this.isUrlProtocolSupported(link) && behavior.shouldCrawl(link);
-      })
+      .filter(link =>
+        this.isUrlProtocolSupported(link) && behavior.shouldCrawl(link)
+      )
       .value();
 
     //console.log('urls to crawl = ', urls);
