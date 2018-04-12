@@ -12,14 +12,13 @@ module.exports = function(config) {
     reporters: ['spec'],
     webpack: {
       mode: 'development',
-      devtool: 'source-map',
+      devtool: 'eval-source-map',
       resolve: {
         extensions: ['.ts', '.tsx', '.js', '.json']
       },
       module: {
         rules: [
-          { test: /\.tsx?$/, loader: 'awesome-typescript-loader' },
-          { enforce: 'pre', test: /\.ts$/, loader: 'source-map-loader' }
+          { test: /\.tsx?$/, loader: 'awesome-typescript-loader' }
         ]
       },
       externals: {
