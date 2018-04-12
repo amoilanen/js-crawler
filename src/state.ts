@@ -43,23 +43,23 @@ export default class State {
     }
   }
 
+  isBeingCrawled(url: string) {
+    return _.contains(this.beingCrawledUrls, url);
+  }
+
   addVisitedUrls(urls: string[]) {
     urls.forEach(url => {
       this.visitedUrls[url] = true;
     });
   }
 
+  isVisitedUrl(url: string): boolean {
+    return Boolean(this.visitedUrls[url]);
+  }
+
   addCrawledUrl(url: string) {
     this.visitedUrls[url] = true;
     this.crawledUrls[url] = true;
-  }
-
-  isBeingCrawled(url: string) {
-    return _.contains(this.beingCrawledUrls, url);
-  }
-
-  isVisitedUrl(url: string): boolean {
-    return Boolean(this.visitedUrls[url]);
   }
 
   finishedCrawling(url: string) {
