@@ -1,5 +1,6 @@
-var Crawler = require('../compiled/crawler');
-var _ = require('underscore');
+const Crawler = require('../compiled/crawler');
+const _ = require('underscore');
+const { expect } = require('chai');
 
 describe('crawler', function() {
 
@@ -27,10 +28,10 @@ describe('crawler', function() {
           crawledUrls.push(page.url);
         },
         function onFailure() {
-          expect('Errors while crawling').to.be('');
+          expect('Errors while crawling').to.eql('');
         },
         function onAllFinished(crawledUrls) {
-          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          expect(crawledUrls.sort()).to.eql(expectedUrls.sort());
           done();
         }
       );
@@ -55,10 +56,10 @@ describe('crawler', function() {
             crawledUrls.push(page.url);
           },
           function onFailure() {
-            expect('Errors while crawling').to.be('');
+            expect('Errors while crawling').to.eql('');
           },
           function onAllFinished(crawledUrls) {
-            expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+            expect(crawledUrls.sort()).to.eql(expectedUrls.sort());
             done();
           }
         );
@@ -97,11 +98,11 @@ describe('crawler', function() {
           crawledUrls.push(page.url);
         },
         function onFailure() {
-          expect('Errors while crawling').to.be('');
+          expect('Errors while crawling').to.eql('');
         },
         function onAllFinished(crawledUrls) {
-          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
-          expect(Object.keys(crawler.state.visitedUrls).sort()).toEqual(expectedKnownUrls.sort());
+          expect(crawledUrls.sort()).to.eql(expectedUrls.sort());
+          expect(Object.keys(crawler.state.visitedUrls).sort()).to.eql(expectedKnownUrls.sort());
           done();
         }
       );
@@ -123,10 +124,10 @@ describe('crawler', function() {
           crawledUrls.push(page.url);
         },
         function onFailure() {
-          expect('Errors while crawling').to.be('');
+          expect('Errors while crawling').to.eql('');
         },
         function onAllFinished(crawledUrls) {
-          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          expect(crawledUrls.sort()).to.eql(expectedUrls.sort());
           done();
         }
       );
@@ -138,12 +139,12 @@ describe('crawler', function() {
     it('should return url, content, status', (done) => {
       crawler.crawl('http://localhost:3000/one_page_graph/page1.html',
         function onSuccess(page) {
-          expect(page.url).toEqual('http://localhost:3000/one_page_graph/page1.html');
-          expect(page.status).toEqual(200);
-          expect(page.content).toEqual('<html><body>One page graph.</body></html>');
-          expect(page.error).toBeNull();
-          expect(page.response).not.toBeNull();
-          expect(page.body).toEqual(page.content);
+          expect(page.url).to.eql('http://localhost:3000/one_page_graph/page1.html');
+          expect(page.status).to.eql(200);
+          expect(page.content).to.eql('<html><body>One page graph.</body></html>');
+          expect(page.error).to.be.null;
+          expect(page.response).not.to.be.null;
+          expect(page.body).to.eql(page.content);
           done();
         }
       );
@@ -157,12 +158,12 @@ describe('crawler', function() {
 
       crawler.crawl('http://localhost:3000/one_page_graph/no_such_page.html', null,
         function onError(page) {
-          expect(page.url).toEqual('http://localhost:3000/one_page_graph/no_such_page.html');
-          expect(page.status).toEqual(HTTP_NOT_FOUND);
-          expect(page.content).toContain('Cannot GET /one_page_graph/no_such_page.html');
-          expect(page.error).toBeNull();
-          expect(page.response).not.toBeNull();
-          expect(page.body).toEqual(page.content);
+          expect(page.url).to.eql('http://localhost:3000/one_page_graph/no_such_page.html');
+          expect(page.status).to.eql(HTTP_NOT_FOUND);
+          expect(page.content).to.contain('Cannot GET /one_page_graph/no_such_page.html');
+          expect(page.error).to.be.null;
+          expect(page.response).not.to.be.null;
+          expect(page.body).to.eql(page.content);
           done();
         }
       );
@@ -184,7 +185,7 @@ describe('crawler', function() {
           crawledUrls.push(page.url);
         },
         finished: function(crawledUrls) {
-          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          expect(crawledUrls.sort()).to.eql(expectedUrls.sort());
           done();
         }
       });
@@ -203,7 +204,7 @@ describe('crawler', function() {
           crawledUrls.push(page.url);
         },
         finished: function(crawledUrls) {
-          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          expect(crawledUrls.sort()).to.eql(expectedUrls.sort());
           done();
         }
       });
@@ -226,11 +227,11 @@ describe('crawler', function() {
         },
         failure: function(error) {
           console.log(error);
-          expect('Error while crawling').toEqual('');
+          expect('Error while crawling').to.eql('');
           done();
         },
         finished: function(crawledUrls) {
-          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          expect(crawledUrls.sort()).to.eql(expectedUrls.sort());
           done();
         }
       });
@@ -255,10 +256,10 @@ describe('crawler', function() {
         function onSuccess(page) {
         },
         function onFailure() {
-          expect('Errors while crawling').to.be('');
+          expect('Errors while crawling').to.eql('');
         },
         function onAllFinished(crawledUrls) {
-          expect(crawledUrls.sort()).toEqual(expectedUrls.sort());
+          expect(crawledUrls.sort()).to.eql(expectedUrls.sort());
           done();
         }
       );
@@ -274,10 +275,10 @@ describe('crawler', function() {
         function onSuccess(page) {
         },
         function onFailure() {
-          expect('Errors while crawling').to.be('');
+          expect('Errors while crawling').to.eql('');
         },
         function onAllFinished(crawledUrls) {
-          expect(crawledUrls.length).toEqual(0);
+          expect(crawledUrls.length).to.eql(0);
           done();
         }
       );

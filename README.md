@@ -245,12 +245,17 @@ launches a browser in which unit tests can be debugged
 
 ##### End-to-end tests
 
-`jasmine-node` and `express` are used to setup and run end-to-end tests
+`mocha` and `express` are used to setup and run end-to-end tests
 
-Install jasmine-node and express globablly
+Make sure dependencies are installed (`mocha` is included)
 
 ```
-npm install -g jasmine-node
+npm install
+```
+
+Install express globablly
+
+```
 npm install -g express
 ```
 
@@ -265,7 +270,7 @@ Now the server runs on the port 3000.
 Run the end-to-end specs:
 
 ```
-jasmine-node e2e/
+npm run e2e
 ```
 
 ## License
