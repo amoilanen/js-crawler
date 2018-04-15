@@ -95,6 +95,9 @@ export default class Response {
   }
 
   getAllUrls(responseUrl: string, body: string, behavior: UrlCrawlingBehavior): string[] {
+    if (!this.isTextHtml()) {
+      return [];
+    }
     body = this.stripComments(body);
     const baseUrl = this.getBaseUrl(responseUrl, body);
     const linksRegex = behavior.ignoreRelative ? /<a[^>]+?href=["'].*?:\/\/.*?["']/gmi : /<a[^>]+?href=["'].*?["']/gmi;

@@ -85,13 +85,10 @@ export default class Crawler {
               referer: referer || ""
             });
             this.state.rememberCrawledUrl(success.lastVisitedUrl);
-            if (this.configuration.options.shouldCrawlLinksFrom(success.lastVisitedUrl) && depth > 1 && resp.isTextHtml()) {
-              //TODO: If is not textContent just return the empty list of urls in the Response implementation
-              const crawlOptions = {
-                ignoreRelative: this.configuration.options.ignoreRelative,
-                shouldCrawl: this.configuration.options.shouldCrawl
-              };
-              this.crawlUrls(resp.getAllUrls(success.lastVisitedUrl, body, crawlOptions), success.lastVisitedUrl, depth - 1);
+            if (this.configuration.options.shouldCrawlLinksFrom(success.lastVisitedUrl) && depth > 1) {
+              const nextUrlsToCrawl = resp.getAllUrls(success.lastVisitedUrl, body, this.configuration.options);
+
+              this.crawlUrls(nextUrlsToCrawl, success.lastVisitedUrl, depth - 1);
             }
           }
         }).catch((failure: RequestFailure) => {

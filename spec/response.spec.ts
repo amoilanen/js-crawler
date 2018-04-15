@@ -13,7 +13,14 @@ describe('response', () => {
   };
 
   beforeEach(() => {
-    response = new Response(null);
+    response = new Response({
+      headers: {
+        'content-type': 'text/html'
+      },
+      body: null,
+      statusCode: null,
+      request: null
+    });
   });
 
   describe('checking if url protocol is supported', () => {
@@ -57,6 +64,22 @@ describe('response', () => {
   describe('getting urls from fragment', () => {
 
     const baseUrl = 'http://localhost:8080/basePath';
+
+    describe('is not text/html', () => {
+
+      it('should return empty list of urls', () => {
+        response = new Response({
+          headers: {
+            'content-type': 'audio/mpeg'
+          },
+          body: null,
+          statusCode: null,
+          request: null
+        });
+        expect(response.getAllUrls(baseUrl, '<a href="somePath/resource1"></a>', crawlOptions))
+          .to.eql([]);
+      });
+    });
 
     it('should get a relative url from fragment', () => {
       expect(response.getAllUrls(baseUrl, '<a href="somePath/resource1"></a>', crawlOptions))
