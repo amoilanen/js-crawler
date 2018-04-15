@@ -56,7 +56,7 @@ describe('state', () => {
       expect(state.isVisitedUrl(url2)).to.be.false;
       expect(state.isVisitedUrl(url3)).to.be.false;
 
-      state.addVisitedUrls([url1, url2]);
+      state.rememberVisitedUrls([url1, url2]);
 
       expect(state.isVisitedUrl(url1)).to.be.true;
       expect(state.isVisitedUrl(url2)).to.be.true;
@@ -74,7 +74,7 @@ describe('state', () => {
       expect(state.isVisitedUrl(url1)).to.be.false;
       expect(state.isVisitedUrl(url2)).to.be.false;
 
-      state.addCrawledUrl(url1);
+      state.rememberCrawledUrl(url1);
 
       expect(state.isVisitedUrl(url1)).to.be.true;
       expect(state.isVisitedUrl(url2)).to.be.false;
@@ -92,7 +92,7 @@ describe('state', () => {
 
     it('should be called when the only url was crawled', () => {
       state.startedCrawling(url1);
-      state.addCrawledUrl(url1);
+      state.rememberCrawledUrl(url1);
       state.finishedCrawling(url1);
       expect(onCrawlingFinished.calledWith([url1])).to.be.true;
     });
@@ -100,7 +100,7 @@ describe('state', () => {
     it('should not call onCrawlingFinished when there are urls being crawled', () => {
       state.startedCrawling(url1);
       state.startedCrawling(url2);
-      state.addCrawledUrl(url1);
+      state.rememberCrawledUrl(url1);
       state.finishedCrawling(url1);
       expect(onCrawlingFinished.callCount).to.eql(0);
     });
@@ -108,7 +108,7 @@ describe('state', () => {
     it('should be called when all urls were crawled', () => {
       urls.forEach(url => {
         state.startedCrawling(url);
-        state.addCrawledUrl(url);
+        state.rememberCrawledUrl(url);
         state.finishedCrawling(url);
       });
       expect(onCrawlingFinished.calledWith(urls)).to.be.true;
@@ -116,12 +116,17 @@ describe('state', () => {
 
     it('should call onCrawlingFinished when urls have redirects', () => {
       // full redirect chain redirect1 -> redirect2 -> redirect3 -> url1
-      const redirectUrls = ['redirect1', 'redirect2', 'redirect3'];
+      const redirectUrls = ['redirect1', 'redirect2', 'redirect3', url1];
       state.startedCrawling('redirect1');
-      state.addVisitedUrls(redirectUrls.concat([url1]));
-      state.addCrawledUrl(url1);
+      state.rememberVisitedUrls(redirectUrls);
+      state.rememberCrawledUrl(url1);
       state.finishedCrawling('redirect1');
       expect(onCrawlingFinished.calledWith([ url1 ])).to.be.true;
+    });
+
+    it('should ignore finishedCrawling if url is not being actively crawled', () => {
+      state.finishedCrawling(url1);
+      expect(state.beingCrawledUrls).to.eql([]);
     });
   });
 });

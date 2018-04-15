@@ -1,4 +1,3 @@
-import * as _ from 'underscore';
 import Executor from './src/executor';
 import Request, {RequestSuccess, RequestFailure} from './src/request';
 import Response, { UrlCrawlingBehavior } from './src/response';
@@ -37,7 +36,7 @@ export default class Crawler {
     });
     this.workExecutor.start();
     const url = this.configuration.updateAndReturnUrl(urlOrOptions, onSuccess, onFailure, onAllFinished);
-    this._crawlUrl(url, null, this.configuration.options.depth);
+    this.crawlUrl(url, null, this.configuration.options.depth);
     return this;
   }
 
@@ -45,15 +44,7 @@ export default class Crawler {
     this.state.clear();
   }
 
-  _shouldSkip(url: string): boolean {
-    const shouldCrawlUrl = this.configuration.options.shouldCrawl(url);
-    if (!shouldCrawlUrl) {
-      this.state.finishedCrawling(url);
-    }
-    return this.state.isVisitedUrl(url) || !shouldCrawlUrl;
-  }
-
-  _crawlUrl(url: string, referer: string, depth: number): void {
+  crawlUrl(url: string, referer: string, depth: number): void {
     
       //console.log('_crawlUrl: url = %s, depth = %s', url, depth);
       if ((depth === 0) || this.state.isVisitedUrl(url) || this.state.isBeingCrawled(url)) {
@@ -63,7 +54,8 @@ export default class Crawler {
     
       this.workExecutor.submit(() => {
     
-        if (this._shouldSkip(url)) {
+        if (this.state.isVisitedUrl(url) || !this.configuration.options.shouldCrawl(url)) {
+          this.state.finishedCrawling(url);
           return Promise.resolve();
         }
     
@@ -78,7 +70,7 @@ export default class Crawler {
             //Was already crawled while the request has been processed, no need to call callbacks
             return;
           }
-          this.state.addVisitedUrls(success.visitedUrls);
+          this.state.rememberVisitedUrls(success.visitedUrls);
     
           const resp = new Response(success.response);
           const body = resp.getBody();
@@ -92,14 +84,14 @@ export default class Crawler {
               body: body,
               referer: referer || ""
             });
-            this.state.addCrawledUrl(success.lastVisitedUrl);
+            this.state.rememberCrawledUrl(success.lastVisitedUrl);
             if (this.configuration.options.shouldCrawlLinksFrom(success.lastVisitedUrl) && depth > 1 && resp.isTextHtml()) {
               //TODO: If is not textContent just return the empty list of urls in the Response implementation
               const crawlOptions = {
                 ignoreRelative: this.configuration.options.ignoreRelative,
                 shouldCrawl: this.configuration.options.shouldCrawl
               };
-              this._crawlUrls(resp.getAllUrls(success.lastVisitedUrl, body, crawlOptions), success.lastVisitedUrl, depth - 1);
+              this.crawlUrls(resp.getAllUrls(success.lastVisitedUrl, body, crawlOptions), success.lastVisitedUrl, depth - 1);
             }
           }
         }).catch((failure: RequestFailure) => {
@@ -114,19 +106,19 @@ export default class Crawler {
             body: body,
             referer: referer || ""
           });
-          this.state.addCrawledUrl(url);
+          this.state.rememberCrawledUrl(url);
         }).then(() => {
           this.state.finishedCrawling(url);
         });
       });
     }
 
-  _crawlUrls(urls: string[], referer: string, depth: number): void {
-    _.each(urls, url => {
-      this._crawlUrl(url, referer, depth);
-    });
+  crawlUrls(urls: string[], referer: string, depth: number): void {
+    urls.forEach(url =>
+      this.crawlUrl(url, referer, depth)
+    );
   }
 }
 
-//To make code that uses RequireJS work without the need to user require('js-crawler').default
+//To make code that uses RequireJS work without the need for the user to do require('js-crawler').default
 module.exports = Crawler;

@@ -47,7 +47,7 @@ export default class State {
     return _.contains(this.beingCrawledUrls, url);
   }
 
-  addVisitedUrls(urls: string[]) {
+  rememberVisitedUrls(urls: string[]) {
     urls.forEach(url => {
       this.visitedUrls[url] = true;
     });
@@ -57,7 +57,7 @@ export default class State {
     return Boolean(this.visitedUrls[url]);
   }
 
-  addCrawledUrl(url: string) {
+  rememberCrawledUrl(url: string) {
     this.visitedUrls[url] = true;
     this.crawledUrls[url] = true;
   }
