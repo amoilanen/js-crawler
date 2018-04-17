@@ -25,16 +25,32 @@ interface Redirect {
   redirectUri: string
 }
 
+export interface HttpClientRequestOptions {
+  url: string,
+  encoding: string,
+  rejectUnauthorized : boolean,
+  followRedirect: boolean,
+  followAllRedirects: boolean,
+  headers: {
+    'User-Agent': string,
+    'Referer': string
+  }
+}
+
+export type HttpClient = (requestOptions: HttpClientRequestOptions, callback: (error: any, response: HttpResponse) => void) => void
+
 export default class Request {
   options: RequestOptions
+  httpClient: HttpClient
 
-  constructor(options: RequestOptions) {
+  constructor(options: RequestOptions, httpClient: HttpClient = req) {
     this.options = options;
+    this.httpClient = httpClient;
   }
 
   submit(): Promise<RequestSuccess> {
     const { referer, url, userAgent } = this.options; 
-    const requestOptions = {
+    const requestOptions: HttpClientRequestOptions = {
       url: url,
       encoding: null, // Added by @tibetty so as to avoid request treating body as a string by default
       rejectUnauthorized : false,
@@ -46,7 +62,7 @@ export default class Request {
       }
     };
     return new Promise((resolve, reject) => {
-      req(requestOptions, function(error, response: HttpResponse) {
+      this.httpClient(requestOptions, function(error, response: HttpResponse) {
         const visitedUrls =_.map(this._redirect.redirects,
           (redirect: Redirect) => redirect.redirectUri
         );
