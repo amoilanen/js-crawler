@@ -8,6 +8,7 @@ describe('response', () => {
 
   const referer = 'referer';
   const url = 'url';
+  const redirectDestinationUrl = 'redirectDestinationUrl';
   const userAgent = 'userAgent';
 
   const requestOptions: RequestOptions = {
@@ -91,8 +92,9 @@ describe('response', () => {
         callbackContext._redirect.redirects = [
           { redirectUri: 'url1' }, { redirectUri: 'url2' }, { redirectUri: 'url3' }
         ];
+        response.request.uri.href = redirectDestinationUrl;
         const expectedRequestSuccess = {
-          visitedUrls: ['url1', 'url2', 'url3', url],
+          visitedUrls: ['url1', 'url2', 'url3', url, redirectDestinationUrl],
           lastVisitedUrl: url,
           response
         };
