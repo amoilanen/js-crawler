@@ -14,6 +14,25 @@ describe('executor', () => {
     executor = new Executor(executorOptions);
   });
 
+  function waitForCondition(condition: () => boolean, options = { checkTimeoutMilliseconds: 10, maxTimeWaitedMilliseconds: 1000 }): Promise<void> {
+    const startTime = new Date().getTime();
+    return new Promise((resolve, reject) => {
+      setTimeout(function check() {
+        if (condition()) {
+          resolve();
+        } else {
+          const currentTime = new Date().getTime();
+          const elapsedTime = currentTime - startTime;
+          if (elapsedTime > options.maxTimeWaitedMilliseconds) {
+            reject(`Timeout waiting for condition ${condition.toString()}`);
+          } else {
+            setTimeout(check, options.checkTimeoutMilliseconds)
+          }
+        }
+      }, options.checkTimeoutMilliseconds);
+    });
+  }
+
   describe('task execution', () => {
 
     it('should execute submitted tasks', (done) => {
@@ -27,16 +46,11 @@ describe('executor', () => {
       });
       executor.start();
 
-      setTimeout(function waitForEmptyQueue() {
-        const isQueueEmpty = executor.queue.length == 0;
-        if (isQueueEmpty) {
-          expect(producedValues).to.eql(values);
-          executor.stop();
-          done();
-        } else {
-          setTimeout(waitForEmptyQueue, 10)
-        }
-      }, 10);
+      waitForCondition(() => executor.queue.length == 0).then(() => {
+        expect(producedValues).to.eql(values);
+        executor.stop();
+        done();
+      });
     });
   });
 });
