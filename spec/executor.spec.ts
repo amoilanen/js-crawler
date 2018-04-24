@@ -38,9 +38,9 @@ describe('executor', () => {
     it('should execute submitted tasks', (done) => {
       let producedValues: Array<number> = [];
       let values = [1, 2, 3, 4, 5];
-      values.forEach((value, idx) => {
+      values.forEach(value => {
         executor.submit(() => {
-          producedValues.push(values[idx]);
+          producedValues.push(value);
           return Promise.resolve();
         });
       });
@@ -51,6 +51,40 @@ describe('executor', () => {
         executor.stop();
         done();
       });
+    });
+
+    it('should stop executing new tasks when maxConcurrentTasks has been reached', (done) => {
+      executor = new Executor(Object.assign(executorOptions, { maxConcurrentTasks: 2}));
+      let values = Array.from({ length: 4 }, (x, i) => i);
+      let producedValues = [];
+      let promiseResolves = [];
+      values.forEach(value => {
+        const promise = new Promise((resolve, reject) => {
+          promiseResolves.push(resolve);
+        });
+        executor.submit(() => {
+          producedValues.push(value);
+          return promise;
+        });
+      });
+      executor.start();
+
+      waitForCondition(() => executor.queue.length == 2).then(() => {
+        expect(producedValues).to.eql([0, 1]);
+        promiseResolves.forEach(resolve => resolve());
+        return waitForCondition(() => executor.queue.length == 0);
+      }).then(() => {
+        expect(producedValues).to.eql([0, 1, 2, 3]);
+        done();
+      });
+    });
+
+    it('should stop executing tasks when stopped', () => {
+      
+    });
+
+    it('continuously executes tasks until explicitly stopped', () => {
+
     });
   });
 });
