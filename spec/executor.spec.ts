@@ -79,8 +79,17 @@ describe('executor', () => {
       });
     });
 
-    it('should stop executing tasks when stopped', () => {
-      
+    it('should stop executing tasks when stopped', (done) => {
+      let values = Array.from({ length: 4 }, (x, i) => i);
+      values.forEach(value => {
+        executor.submit(() => Promise.resolve());
+      });
+      executor.stop();
+      executor.processQueueItem();
+      setTimeout(() => {
+        expect(executor.queue.length).to.eql(4);
+        done();
+      }, 500);
     });
 
     it('continuously executes tasks until explicitly stopped', () => {

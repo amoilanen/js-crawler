@@ -43,6 +43,9 @@ export default class Executor {
   }
 
   processQueueItem() {
+    if (this.isStopped) {
+      return;
+    }
     if (!this.hasTooManyConcurrentTasks()) {
       if (this.queue.length !== 0) {
         const nextExecution = this.queue.shift();
@@ -51,9 +54,6 @@ export default class Executor {
           this.concurrentTaskNumber--;
         });
       }
-    }
-    if (this.isStopped) {
-      return;
     }
     setTimeout(() => {
       this.processQueueItem();
