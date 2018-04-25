@@ -92,8 +92,23 @@ describe('executor', () => {
       }, 500);
     });
 
-    it('continuously executes tasks until explicitly stopped', () => {
+    it('continuously executes tasks until explicitly stopped', (done) => {
+      let values = [1, 2, 3];
+      let producedValues = [];
+      values.forEach(value => {
+        executor.submit(() => {
+          producedValues.push(value);
+          executor.stop();
+          return Promise.resolve();
+        });
+      });
 
+      executor.start();
+      setTimeout(() => {
+        expect(executor.queue.length).to.eql(2);
+        expect(producedValues).to.eql([ 1 ]);
+        done();
+      }, 500);
     });
   });
 });
