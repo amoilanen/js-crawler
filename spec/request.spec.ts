@@ -4,7 +4,7 @@ const _ = require('underscore');
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 
-describe('response', () => {
+describe('request', () => {
 
   const referer = 'referer';
   const url = 'url';
