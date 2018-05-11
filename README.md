@@ -186,37 +186,29 @@ argument is the current `url` the crawler considers for crawling
 
 * `shouldCrawlLinksFrom` - function that specifies whether the crawler should crawl links found at a given url, returns `true` or `false`, argument is the current `url` being crawled
 
-Note: `shouldCrawl` determines if a given URL should be requested/visited at all, where as `shouldCrawlLinksFrom` determines if the links on a given URL should be harvested/added to the crawling queue. Many users may find that using `shouldCrawl` is sufficient, as links from a page cannot be crawled if the page is never visited/requested in the first place. A common use case for having these functions separated: if a user would like to check external links on a site for errors without crawling those external links, the user could create a `shouldCrawlLinksFrom` function that restricts crawling to the original url without visiting external links.
+Note: `shouldCrawl` determines if a given URL should be requested/visited at all, whereas `shouldCrawlLinksFrom` determines if the links on a given URL should be harvested/added to the crawling queue. Many users may find that using `shouldCrawl` is sufficient, as links from a page cannot be crawled if the page is never visited/requested in the first place. However there is a common use case for having `shouldCrawlLinksFrom`: if a user would like to check external links on a site for errors without crawling those external links, the user could create a `shouldCrawlLinksFrom` function that restricts crawling to the original url without visiting external links.
 
 
 **Examples:**
 
-The following will crawl the specified URL, but not allow external URLs to be visited/requested, and therefore not search for additional links to crawl on the external URLs:
+`shouldCrawl`: the following will crawl subreddit index pages reachable on reddit.com from the JavaScript subreddit:
+
 ```javascript
 var Crawler = require("js-crawler");
+
+var rootUrl = "http://www.reddit.com/r/javascript";
+
+function isSubredditUrl(url) {
+  return !!url.match(/www\.reddit\.com\/r\/[a-zA-Z0-9]+\/$/g);
+}
 
 var crawler = new Crawler().configure({
   shouldCrawl: function(url) {
-    return url.indexOf("reddit.com") < 0;
+    return isSubredditUrl(url) || url == rootUrl;
   }
 });
 
-crawler.crawl("http://www.reddit.com/r/javascript", function(page) {
-  console.log(page.url);
-});
-```
-
-The following will crawl the specified URL, allow external URLs to be visited/requested, but will not search for additional links to crawl on the external URLs:
-```javascript
-var Crawler = require("js-crawler");
-
-var crawler = new Crawler().configure({
-  shouldCrawlLinksFrom: function(url) {
-    return url.indexOf("reddit.com") < 0;
-  }
-});
-
-crawler.crawl("http://www.reddit.com/r/javascript", function(page) {
+crawler.crawl(rootUrl, function(page) {
   console.log(page.url);
 });
 ```
