@@ -38,7 +38,7 @@ const DEFAULT_MAX_CONCURRENT_REQUESTS = 10;
 const DEFAULT_MAX_REQUESTS_PER_SECOND = 100;
 const DEFAULT_USERAGENT = 'crawler/js-crawler';
 
-const DEFAULT_OPTIONS: ConfigurationOptions = {
+export const DEFAULT_OPTIONS: ConfigurationOptions = {
   depth: DEFAULT_DEPTH,
   ignoreRelative: false,
   userAgent: DEFAULT_USERAGENT,
@@ -55,26 +55,39 @@ export default class Configuration {
 
   config: ConfigurationOptions;
 
-  configure(options: ConfigurationOptions) {
+  constructor() {
+    this.configure({});
+  }
+
+  configure(options: CrawlOptions) {
     this.config = Object.assign({}, DEFAULT_OPTIONS, options);
     this.config.depth = Math.max(this.config.depth, 0);
   }
 
   get options(): CrawlOptions {
     return _.pick(this.config, [
-      'depth', 'ignoreRelative', 'userAgent', 'maxConcurrentRequests', 'maxRequestsPerSecond', 'shouldCrawl', 'shouldCrawlLinksFrom'
+      'depth',
+      'ignoreRelative',
+      'userAgent',
+      'maxConcurrentRequests',
+      'maxRequestsPerSecond',
+      'shouldCrawl',
+      'shouldCrawlLinksFrom'
     ]);
   }
 
   get crawlingBehavior(): UrlCrawlingBehavior {
     return _.pick(this.config, [
-      'ignoreRelative', 'shouldCrawl'
+      'ignoreRelative',
+      'shouldCrawl'
     ]);
   }
 
   get callbacks(): CrawlCallbacks {
     return _.pick(this.config, [
-      'success', 'failure', 'finished'
+      'success',
+      'failure',
+      'finished'
     ]);
   }
 
