@@ -86,7 +86,7 @@ export default class Crawler {
             });
             this.state.rememberCrawledUrl(success.lastVisitedUrl);
             if (this.configuration.options.shouldCrawlLinksFrom(success.lastVisitedUrl) && depth > 1) {
-              const nextUrlsToCrawl = resp.getAllUrls(success.lastVisitedUrl, body, this.configuration.options);
+              const nextUrlsToCrawl = resp.getAllUrls(success.lastVisitedUrl, body, this.configuration.crawlingBehavior);
 
               this.crawlUrls(nextUrlsToCrawl, success.lastVisitedUrl, depth - 1);
             }

@@ -1,5 +1,5 @@
 import * as _ from 'underscore';
-import { HttpResponse } from './response';
+import { HttpResponse, UrlCrawlingBehavior } from './response';
 
 export interface UrlCrawlingResult {
   url: string,
@@ -16,13 +16,13 @@ export type FailureCallback = (crawlingResult: UrlCrawlingResult) => void;
 export type FinishedCallback = (crawledUrls: string[]) => void;
 
 export interface CrawlOptions {
-  depth: number;
-  ignoreRelative: boolean;
-  userAgent: string;
-  maxConcurrentRequests: number;
-  maxRequestsPerSecond: number;
-  shouldCrawl: (url: string) => boolean;
-  shouldCrawlLinksFrom: (url: string) => boolean;
+  depth?: number;
+  ignoreRelative?: boolean;
+  userAgent?: string;
+  maxConcurrentRequests?: number;
+  maxRequestsPerSecond?: number;
+  shouldCrawl?: (url: string) => boolean;
+  shouldCrawlLinksFrom?: (url: string) => boolean;
 }
 
 export interface CrawlCallbacks {
@@ -63,6 +63,12 @@ export default class Configuration {
   get options(): CrawlOptions {
     return _.pick(this.config, [
       'depth', 'ignoreRelative', 'userAgent', 'maxConcurrentRequests', 'maxRequestsPerSecond', 'shouldCrawl', 'shouldCrawlLinksFrom'
+    ]);
+  }
+
+  get crawlingBehavior(): UrlCrawlingBehavior {
+    return _.pick(this.config, [
+      'ignoreRelative', 'shouldCrawl'
     ]);
   }
 
