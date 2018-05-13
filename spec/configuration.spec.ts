@@ -5,12 +5,12 @@ import { expect } from 'chai';
 
 describe('configuration', () => {
 
+  const url = 'url';
   let configuration: Configuration;
 
   describe('default options', () => {
 
     const nonDefaultDepth = 100;
-    const url = 'url';
 
     beforeEach(() => {
       configuration = new Configuration();
@@ -60,6 +60,35 @@ describe('configuration', () => {
     it('should return "callbacks"', () => {
       configuration = new Configuration();
       expect(configuration.callbacks).to.eql(_.pick(DEFAULT_OPTIONS, ['success', 'failure', 'finished']));
+    });
+  });
+
+  describe('update crawling callbacks and return url', () => {
+
+    const success = sinon.fake();
+    const failure = sinon.fake();
+    const finished = sinon.fake();
+
+    it('should allow to provide options as separate arguments', () => {
+      configuration = new Configuration();
+      const returnedUrl = configuration.updateAndReturnUrl(url, success, failure, finished);
+      expect(returnedUrl).to.eql(url);
+      expect(configuration.callbacks).to.eql({
+        success,
+        failure,
+        finished
+      })
+    });
+
+    it('should allow to use the options API', () => {
+      configuration = new Configuration();
+      const returnedUrl = configuration.updateAndReturnUrl({url, success, failure, finished});
+      expect(returnedUrl).to.eql(url);
+      expect(configuration.callbacks).to.eql({
+        success,
+        failure,
+        finished
+      })
     });
   });
 });
