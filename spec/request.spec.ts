@@ -1,4 +1,4 @@
-import Request, { RequestOptions, HttpClient, RequestSuccess, RequestFailure } from '../src/request';
+import DefaultRequest, { RequestOptions, HttpClient, RequestSuccess, RequestFailure } from '../src/request';
 import { HttpResponse } from '../src/response';
 const _ = require('underscore');
 import * as sinon from 'sinon';
@@ -17,7 +17,7 @@ describe('request', () => {
     userAgent
   };
 
-  let request: Request;
+  let request: DefaultRequest;
   let mockHttpClient: HttpClient;
 
   let callbackContext;
@@ -52,7 +52,7 @@ describe('request', () => {
       callback.call(callbackContext, error, response);
       receivedRequestOptions = options;
     });
-    request = new Request(requestOptions, mockHttpClient);
+    request = new DefaultRequest(requestOptions, mockHttpClient);
   });
 
   describe('success response', () => {

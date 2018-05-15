@@ -1,4 +1,4 @@
-import Executor from '../src/executor';
+import AsynchronousExecutor from '../src/executor';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import { waitForCondition, waitForSomeTime } from './util/util';
@@ -14,7 +14,7 @@ describe('executor', () => {
   let executor;
 
   beforeEach(() => {
-    executor = new Executor(executorOptions);
+    executor = new AsynchronousExecutor(executorOptions);
     producedValues = [];
   });
 
@@ -53,7 +53,7 @@ describe('executor', () => {
     });
 
     it('should stop executing new tasks when maxConcurrentTasks has been reached', (done) => {
-      executor = new Executor(Object.assign(executorOptions, { maxConcurrentTasks: 2}));
+      executor = new AsynchronousExecutor(Object.assign(executorOptions, { maxConcurrentTasks: 2}));
       const taskResolves = getSubmittedTaskHandles(value => {
         producedValues.push(value);
       });

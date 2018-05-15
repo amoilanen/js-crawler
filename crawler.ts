@@ -1,5 +1,5 @@
-import Executor from './src/executor';
-import Request, {RequestSuccess, RequestFailure} from './src/request';
+import AsynchronousExecutor, { Executor } from './src/executor';
+import DefaultRequest, { Request, RequestSuccess, RequestFailure } from './src/request';
 import Response, { UrlCrawlingBehavior } from './src/response';
 import Configuration,
   { ConfigurationOptions, CrawlCallbacks, SuccessCallback,
@@ -21,6 +21,21 @@ export default class Crawler {
     this.configuration = new Configuration();
   }
 
+  createExecutor(): Executor {
+    return new AsynchronousExecutor({
+      maxRatePerSecond: this.configuration.options.maxRequestsPerSecond,
+      maxConcurrentTasks: this.configuration.options.maxConcurrentRequests
+    });
+  }
+
+  createRequest(referer: string, url: string): Request {
+    return new DefaultRequest({
+      referer,
+      url,
+      userAgent: this.configuration.options.userAgent
+    });
+  }
+
   configure(options: ConfigurationOptions): Crawler {
     this.configuration.configure(options);
     return this;
@@ -30,10 +45,7 @@ export default class Crawler {
       onSuccess?: SuccessCallback,
       onFailure?: FailureCallback,
       onAllFinished?: FinishedCallback): Crawler {
-    this.workExecutor = new Executor({
-      maxRatePerSecond: this.configuration.options.maxRequestsPerSecond,
-      maxConcurrentTasks: this.configuration.options.maxConcurrentRequests
-    });
+    this.workExecutor = this.createExecutor();
     this.workExecutor.start();
     const url = this.configuration.updateAndReturnUrl(urlOrOptions, onSuccess, onFailure, onAllFinished);
     this.crawlUrl(url, null, this.configuration.options.depth);
@@ -58,13 +70,9 @@ export default class Crawler {
           this.state.finishedCrawling(url);
           return Promise.resolve();
         }
-    
-        const req = new Request({
-          referer,
-          url,
-          userAgent: this.configuration.options.userAgent
-        });
-        return req.submit().then((success: RequestSuccess) => {
+
+        return this.createRequest(referer, url).submit()
+            .then((success: RequestSuccess) => {
     
           if (this.state.isVisitedUrl(url)) {
             //Was already crawled while the request has been processed, no need to call callbacks
@@ -118,4 +126,7 @@ export default class Crawler {
 }
 
 //To make code that uses RequireJS work without the need for the user to do require('js-crawler').default
-module.exports = Crawler;
+declare const window: any;
+if (typeof(window) === 'undefined') {
+  module.exports = Crawler;
+}

@@ -39,7 +39,11 @@ export interface HttpClientRequestOptions {
 
 export type HttpClient = (requestOptions: HttpClientRequestOptions, callback: (error: any, response: HttpResponse) => void) => void
 
-export default class Request {
+export interface Request {
+  submit: () => Promise<RequestSuccess>;
+}
+
+export default class DefaultRequest implements Request {
   options: RequestOptions
   httpClient: HttpClient
 

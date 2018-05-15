@@ -9,7 +9,13 @@ export interface ExecutorOptions {
   maxConcurrentTasks: number
 }
 
-export default class Executor {
+export interface Executor {
+  start: () => void,
+  submit: (task: ExecutableTask) => void,
+  stop: () => void
+}
+
+export default class AsynchronousExecutor implements Executor {
   maxRatePerSecond: number;
   maxConcurrentTasks: number;
   concurrentTaskNumber: number;
