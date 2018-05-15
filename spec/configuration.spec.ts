@@ -1,6 +1,5 @@
 import { default as Configuration, DEFAULT_OPTIONS } from '../src/configuration';
 const _ = require('underscore');
-import * as sinon from 'sinon';
 import { expect } from 'chai';
 
 describe('configuration', () => {
@@ -65,9 +64,9 @@ describe('configuration', () => {
 
   describe('update crawling callbacks and return url', () => {
 
-    const success = sinon.fake();
-    const failure = sinon.fake();
-    const finished = sinon.fake();
+    const success = _.noop;
+    const failure = _.noop;
+    const finished = _.noop;
 
     it('should allow to provide options as separate arguments', () => {
       configuration = new Configuration();
