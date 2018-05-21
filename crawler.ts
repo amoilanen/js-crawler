@@ -79,7 +79,7 @@ export default class Crawler {
             return;
           }
           this.state.rememberVisitedUrls(success.visitedUrls);
-    
+
           const resp = new Response(success.response);
           const body = resp.getBody();
           if (this.configuration.options.shouldCrawl(success.lastVisitedUrl)) {
