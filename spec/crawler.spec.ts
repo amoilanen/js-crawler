@@ -60,11 +60,17 @@ describe('crawler', () => {
 
   describe('crawl 1 url', () => {
 
-    const success = sinon.fake();
-    const failure = sinon.fake();
-    const finished = sinon.fake();
+    let success;
+    let failure;
+    let finished;
 
-    it('should call request', (done) => {
+    beforeEach(() => {
+      success = sinon.fake();
+      failure = sinon.fake();
+      finished = sinon.fake();
+    });
+
+    it('should call callbacks and update state when successful', (done) => {
       const originalFinishedCrawling = crawler.state.finishedCrawling;
       const fakeFinishedCrawling = sinon.stub();
       crawler.state.finishedCrawling = fakeFinishedCrawling;
@@ -95,13 +101,58 @@ describe('crawler', () => {
         finished
       });
     });
+
+    it('should call callbacks and update state when unsuccessful', (done) => {
+      const error = 'Some error';
+      const submitReference: any = request.submit;
+      submitReference.callsFake(() => {
+        return Promise.reject({
+          error,
+          response
+        })
+      });
+      response.statusCode = 404;
+
+      const originalFinishedCrawling = crawler.state.finishedCrawling;
+      const fakeFinishedCrawling = sinon.stub();
+      crawler.state.finishedCrawling = fakeFinishedCrawling;
+      fakeFinishedCrawling.callsFake(() => {
+        originalFinishedCrawling.call(crawler.state, url);
+        expect(createRequest.calledWith(null, url)).to.be.true;
+        expect(crawler.state.crawledUrls).to.eql({  [url]: true });
+        expect(crawler.state.visitedUrls).to.eql({ [url]: true });
+        expect(crawler.state.beingCrawledUrls).to.eql([]);
+        expect(success.notCalled).to.be.true;
+        expect(failure.calledWith({
+          url,
+          status: 404,
+          content: 'body',
+          error: error,
+          response: response,
+          body: 'body',
+          referer: ''
+        })).to.be.true;
+        expect(finished.calledWith([url])).to.be.true;
+        done();
+      });
+
+      crawler.crawl({
+        url,
+        success,
+        failure,
+        finished
+      });
+    });
   });
+
+  //TODO: Request failure
+  //TODO: Urls from the response are crawled again if depth > 1
+  //TODO: If depth is 1 urls from the response are not crawled
 
   //TODO: If url has already been crawled or visited it is not crawled again
   //TODO: If depth is 0 url is not crawled
   //TODO: Crawled url is remembered in the state
-  //TODO: Urls from the response are crawled again if depth > 1
-  //TODO: If depth is 1 urls from the response are not crawled
   //TODO: Test different RequestSuccess values and how they are handled
+  //TODO: Test redirects
   //TODO: On crawling finished callback "finished" is called, executor is stopped
 });
