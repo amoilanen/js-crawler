@@ -1,5 +1,6 @@
 import Crawler from '../crawler';
 import AsynchronousExecutor, { ExecutableTask, Executor } from '../src/executor';
+import { immediateExecutor, textResponse, interceptAfter } from './util/util';
 import DefaultRequest, { Request } from '../src/request';
 import State from '../src/state';
 const _ = require('underscore');
@@ -11,49 +12,34 @@ describe('crawler', () => {
 
   const url = 'http://someurl.edu';
   let crawler: Crawler;
-  let executor: Executor;
   let createExecutor: any;
   let request: Request;
   let createRequest: any;
   let response: HttpResponse;
 
-  beforeEach(() => {
-    crawler = new Crawler();
-    executor = {
-      start: () => {},
-      submit: (task: ExecutableTask) => {
-        task();
-      },
-      stop: () => {}
-    };
-    response = {
-      headers: {
-        'content-type': 'text/html'
-      },
-      body: {
-        toString(encoding: string) {
-          return 'body';
-        }
-      },
-      statusCode: 200,
-      request: {
-        uri: {
-          href: url
-        }
-      }
-    };
-    request = {
+  const succeedingRequest = (options: {visitedUrls: string[], lastVisitedUrl: string, response: HttpResponse}) => {
+    const { visitedUrls, lastVisitedUrl, response } = options;
+
+    return ({
       submit: sinon.stub().callsFake(() => {
         return Promise.resolve({
-          visitedUrls: [ url ],
-          lastVisitedUrl: url,
+          visitedUrls: visitedUrls,
+          lastVisitedUrl: lastVisitedUrl,
           response
         })
       })
-    };
+    });
+  }
 
-    createExecutor = sinon.stub().callsFake(() => executor);
-    crawler.createExecutor = createExecutor;
+  beforeEach(() => {
+    crawler = new Crawler();
+    response = textResponse(url, 200, 'body');
+    request = succeedingRequest({
+      visitedUrls: [ url ],
+      lastVisitedUrl: url,
+      response
+    });
+    crawler.createExecutor = sinon.stub().callsFake(() => immediateExecutor);
     createRequest = sinon.stub().callsFake(() => request);
     crawler.createRequest = createRequest;
   });
@@ -71,16 +57,12 @@ describe('crawler', () => {
     });
 
     it('should call callbacks and update state when successful', (done) => {
-      const originalFinishedCrawling = crawler.state.finishedCrawling;
-      const fakeFinishedCrawling = sinon.stub();
-      crawler.state.finishedCrawling = fakeFinishedCrawling;
-      fakeFinishedCrawling.callsFake(() => {
-        originalFinishedCrawling.call(crawler.state, url);
-        expect(createRequest.calledWith(null, url)).to.be.true;
+      interceptAfter(crawler.state, 'finishedCrawling', url => {
+        sinon.assert.calledWith(createRequest, null, url);
         expect(crawler.state.crawledUrls).to.eql({  [url]: true });
         expect(crawler.state.visitedUrls).to.eql({ [url]: true });
         expect(crawler.state.beingCrawledUrls).to.eql([]);
-        expect(success.calledWith({
+        sinon.assert.calledWith(success, {
           url,
           status: 200,
           content: 'body',
@@ -88,9 +70,9 @@ describe('crawler', () => {
           response: response,
           body: 'body',
           referer: ''
-        })).to.be.true;
+        });
         expect(failure.notCalled).to.be.true;
-        expect(finished.calledWith([url])).to.be.true;
+        sinon.assert.calledWith(finished, [url]);
         done();
       });
 
@@ -111,28 +93,25 @@ describe('crawler', () => {
           response
         })
       });
-      response.statusCode = 404;
+      const errorBody = 'Some error happened';
+      response = textResponse(url, 404, errorBody);
 
-      const originalFinishedCrawling = crawler.state.finishedCrawling;
-      const fakeFinishedCrawling = sinon.stub();
-      crawler.state.finishedCrawling = fakeFinishedCrawling;
-      fakeFinishedCrawling.callsFake(() => {
-        originalFinishedCrawling.call(crawler.state, url);
-        expect(createRequest.calledWith(null, url)).to.be.true;
+      interceptAfter(crawler.state, 'finishedCrawling', url => {
+        sinon.assert.calledWith(createRequest, null, url);
         expect(crawler.state.crawledUrls).to.eql({  [url]: true });
         expect(crawler.state.visitedUrls).to.eql({ [url]: true });
         expect(crawler.state.beingCrawledUrls).to.eql([]);
         expect(success.notCalled).to.be.true;
-        expect(failure.calledWith({
+        sinon.assert.calledWith(failure, {
           url,
           status: 404,
-          content: 'body',
+          content: errorBody,
           error: error,
           response: response,
-          body: 'body',
+          body: errorBody,
           referer: ''
-        })).to.be.true;
-        expect(finished.calledWith([url])).to.be.true;
+        });
+        sinon.assert.calledWith(finished, [url]);
         done();
       });
 
@@ -145,7 +124,6 @@ describe('crawler', () => {
     });
   });
 
-  //TODO: Request failure
   //TODO: Urls from the response are crawled again if depth > 1
   //TODO: If depth is 1 urls from the response are not crawled
 
