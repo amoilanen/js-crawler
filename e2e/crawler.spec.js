@@ -1,4 +1,4 @@
-const Crawler = require('../compiled/crawler');
+const Crawler = require('../compiled/crawler').default;
 const _ = require('underscore');
 const { expect } = require('chai');
 
