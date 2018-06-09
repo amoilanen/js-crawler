@@ -17,6 +17,7 @@ package-lock.json
 
 compiled
 webpack.dist
+.vscode
 
 lib
 
