@@ -1,13 +1,13 @@
 {
   "name": "js-crawler",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "description": "Web crawler for Node.js",
   "main": "crawler.js",
   "directories": {
     "example": "examples"
   },
   "dependencies": {
-    "request": "~2.55.0",
+    "request": "~2.87.0",
     "underscore": "~1.8.3"
   },
   "devDependencies": {
