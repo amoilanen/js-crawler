@@ -8,6 +8,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "js-crawler": "file:../js-crawler-0.9.0.tgz"
+    "js-crawler": "file:../js-crawler-1.0.1.tgz"
   }
 }

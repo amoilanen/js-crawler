@@ -1,4 +1,4 @@
-var Crawler = require("js-crawler");
+var Crawler = require("js-crawler").default;
 
 //Also possible to configure maximum 1 request per 10 seconds
 //var crawler = new Crawler().configure({maxRequestsPerSecond: 0.1});

@@ -1,6 +1,6 @@
 {
   "name": "js-crawler",
-  "version": "0.9.0",
+  "version": "1.0.1",
   "description": "Web crawler for Node.js",
   "main": "compiled/crawler.js",
   "files": [
@@ -39,8 +39,8 @@
   "scripts": {
     "build": "tsc -p .",
     "lint": "tslint -c tslint.json crawler.ts src/*.ts spec/*.ts",
-    "test": "karma start",
-    "test:tdd": "karma start --tdd",
+    "test": "ENV=test karma start",
+    "test:tdd": "ENV=test karma start --tdd",
     "e2e": "npm run build && ./node_modules/mocha/bin/mocha e2e/crawler.spec.js --color --check-leaks",
     "test2": "npm run build && ENV=test ./node_modules/mocha/bin/mocha compiled/spec/*.spec.js --color",
     "test:packaging": "./test_packaging.sh",

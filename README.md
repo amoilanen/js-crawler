@@ -14,7 +14,7 @@ npm install js-crawler
 The crawler provides intuitive interface to crawl links on web sites. Example:
 
 ```javascript
-var Crawler = require("js-crawler");
+var Crawler = require("js-crawler").default;
 
 new Crawler().configure({depth: 3})
   .crawl("http://www.google.com", function onSuccess(page) {
@@ -38,7 +38,7 @@ Extra information can be retrieved from the rest of the `page` fields: `error`, 
 Alternative APIs for passing callbacks to the `crawl` function.
 
 ```javascript
-var Crawler = require("js-crawler");
+var Crawler = require("js-crawler").default;
 
 var crawler = new Crawler().configure({ignoreRelative: false, depth: 2});
 
@@ -61,7 +61,7 @@ crawler.crawl({
 It is possible to pass an extra callback to handle errors, consider the modified example above:
 
 ```javascript
-var Crawler = require("js-crawler");
+var Crawler = require("js-crawler").default;
 
 new Crawler().configure({depth: 3})
   .crawl("http://www.google.com", function(page) {
@@ -82,7 +82,7 @@ Extra callback can be passed that will be called when all the urls have been cra
 All crawled urls will be passed to that callback as an argument.
 
 ```javascript
-var Crawler = require("js-crawler");
+var Crawler = require("js-crawler").default;
 
 new Crawler().configure({depth: 2})
   .crawl("http://www.google.com", function onSuccess(page) {
@@ -100,7 +100,7 @@ new Crawler().configure({depth: 2})
 By default the maximum number of HTTP requests made per second is 100, but this can be adjusted by using the option `maxRequestsPerSecond` if one wishes not to use too much of network or, opposite, wishes for yet faster crawling.
 
 ```javascript
-var Crawler = require("js-crawler");
+var Crawler = require("js-crawler").default;
 
 var crawler = new Crawler().configure({maxRequestsPerSecond: 2});
 
@@ -130,7 +130,7 @@ can help ensure that the network is not overloaded with piling up requests.
 It is possible to customize both options in case we are not sure how performant the network and sites are. Then `maxRequestsPerSecond` limits how many requests the crawler is allowed to make and `maxConcurrentRequests` allows to specify how should the crawler adjust its rate of requests depending on the real-time performance of the network/sites.
 
 ```javascript
-var Crawler = require("js-crawler");
+var Crawler = require("js-crawler").default;
 
 var crawler = new Crawler().configure({
   maxRequestsPerSecond: 10,
@@ -194,7 +194,7 @@ Note: `shouldCrawl` determines if a given URL should be requested/visited at all
 `shouldCrawl`: the following will crawl subreddit index pages reachable on reddit.com from the JavaScript subreddit:
 
 ```javascript
-var Crawler = require("js-crawler");
+var Crawler = require("js-crawler").default;
 
 var rootUrl = "http://www.reddit.com/r/javascript";
 

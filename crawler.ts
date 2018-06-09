@@ -124,9 +124,3 @@ export default class Crawler {
     );
   }
 }
-
-//To make code that uses RequireJS work without the need for the user to do require('js-crawler').default
-declare const window: any;
-if ((typeof(window) === 'undefined') && (process.env.ENV !== 'dev')) {
-  module.exports = Crawler;
-}

@@ -2,7 +2,7 @@
  * Demonstrates how the same crawler can be reused among several pages 
  * in order not to visit the same link twice
  */
-var Crawler = require("js-crawler");
+var Crawler = require("js-crawler").default;
 
 var crawler = new Crawler().configure({depth: 2});
 
