@@ -57,8 +57,8 @@ export default class Crawler {
   }
 
   crawlUrl(url: string, referer: string, depth: number): void {
-    
-      //console.log('_crawlUrl: url = %s, depth = %s', url, depth);
+
+      console.log('_crawlUrl: url = %s, depth = %s', url, depth);
       if ((depth === 0) || this.state.isVisitedUrl(url) || this.state.isBeingCrawled(url)) {
         return;
       }
@@ -113,6 +113,7 @@ export default class Crawler {
           });
           this.state.rememberCrawledUrl(url);
         }).then(() => {
+          console.log('finished: url = %s, depth = %s', url, depth);
           this.state.finishedCrawling(url);
         });
       });
