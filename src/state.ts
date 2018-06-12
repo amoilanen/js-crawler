@@ -62,7 +62,7 @@ export default class State {
     this.crawledUrls[url] = true;
   }
 
-  finishedCrawling(url: string) {
+  finishedCrawling(url?: string) {
     //console.log("Finished crawling url = ", url);
     //console.log("beingCrawledUrls = ", this.beingCrawledUrls);
     const indexOfUrl = this.beingCrawledUrls.indexOf(url);

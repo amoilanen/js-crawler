@@ -123,8 +123,6 @@ describe('crawler', () => {
     });
   });
 
-  //TODO: Urls from the response are crawled again if depth > 1
-  //TODO: If depth is 1 urls from the response are not crawled
   describe('crawled url contains links to further urls', () => {
 
     const responseBody = `
@@ -132,13 +130,15 @@ describe('crawler', () => {
       <a href="b"></a>
       <a href="c"></a>`;
 
+    beforeEach(() => {
+      response.body = {
+        toString: () => responseBody
+      };
+    });
+
     describe('depth is greater than 1', () => {
 
       it('should crawl links', done => {
-        response.body = {
-          toString: () => responseBody
-        };
-
         const expectedUrls = [
           url,
           `${url}/a`,
@@ -149,6 +149,56 @@ describe('crawler', () => {
         finished.callsFake(urls => {
           expect(urls).to.eql(expectedUrls);
           done();
+        });
+
+        crawler.crawl({
+          url,
+          success,
+          failure,
+          finished
+        });
+      });
+    });
+
+    describe('depth is 1', () => {
+
+      it('should crawl only parent url', done => {
+        const expectedUrls = [ url ];
+
+        finished.callsFake(urls => {
+          expect(urls).to.eql(expectedUrls);
+          done();
+        });
+
+        crawler.configure({
+          depth: 1,
+          success,
+          failure,
+          finished
+        });
+
+        crawler.crawl({
+          url,
+          success,
+          failure,
+          finished
+        });
+      });
+    });
+
+    describe('depth is 0', () => {
+
+      it('should not crawl any urls, should call "finished" callback still', done => {
+        finished.callsFake(urls => {
+          expect(urls).to.eql([]);
+          done();
+        });
+
+        crawler.configure({
+          depth: 0,
+          success,
+          failure,
+          finished
         });
 
         crawler.crawl({
