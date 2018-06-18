@@ -10,7 +10,7 @@ import { HttpResponse } from '../src/response';
 
 describe('crawler', () => {
 
-  const url = 'http://someurl.edu';
+  const url = 'http://someurl.edu/';
   let crawler: Crawler;
   let createExecutor: any;
   let requests: Request[];
@@ -141,9 +141,9 @@ describe('crawler', () => {
       it('should crawl links', done => {
         const expectedUrls = [
           url,
-          `${url}/a`,
-          `${url}/b`,
-          `${url}/c`
+          `${url}a`,
+          `${url}b`,
+          `${url}c`
         ];
 
         finished.callsFake(urls => {
@@ -211,9 +211,61 @@ describe('crawler', () => {
     });
   });
 
-  //TODO: If url has already been crawled or visited it is not crawled again
-  //TODO: If depth is 0 url is not crawled
-  //TODO: Crawled url is remembered in the state
+  describe('remembering crawled urls', () => {
+
+    const responseBody = `<a href="${url}"></a>`;
+
+    beforeEach(() => {
+      response.body = {
+        toString: () => responseBody
+      };
+      crawler.configure({
+        depth: 2,
+        success,
+        failure,
+        finished
+      });
+
+      crawler.crawl({
+        url,
+        success,
+        failure,
+        finished
+      });
+    });
+
+    it('should not crawl urls twice', done => {
+      finished.callsFake(urls => {
+        expect(urls).to.eql([url]);
+        expect(success.calledOnce).to.be.true;
+        sinon.assert.calledWith(success, {
+          url,
+          status: 200,
+          content: responseBody,
+          error: null,
+          response: response,
+          body: responseBody,
+          referer: ''
+        });
+        expect(failure.notCalled).to.be.true;
+        done();
+      });
+    });
+
+    it('should remember crawled url in the state', done => {
+      finished.callsFake(urls => {
+        expect(crawler.state.visitedUrls).to.eql({
+          [url]: true
+        });
+        expect(crawler.state.crawledUrls).to.eql({
+          [url]: true
+        });
+        done();
+      });
+    });
+  });
+
+  //TODO: Test that normalized urls are accounted for, i.e. http://url and http://url/ should be the same url
   //TODO: Test different RequestSuccess values and how they are handled
   //TODO: Test redirects
   //TODO: On crawling finished callback "finished" is called, executor is stopped
