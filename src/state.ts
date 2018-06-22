@@ -1,8 +1,12 @@
 import * as _ from 'underscore';
+import { URL } from 'url';
 
 export interface StateChangeCallbacks {
   onCrawlingFinished: (crawledUrls: string[]) => void
 }
+
+const normalizeUrl = (url: string) =>
+  new URL(url).href;
 
 export default class State {
 
@@ -38,26 +42,30 @@ export default class State {
   }
 
   startedCrawling(url: string) {
+    url = normalizeUrl(url);
     if (this.beingCrawledUrls.indexOf(url) < 0) {
       this.beingCrawledUrls.push(url);
     }
   }
 
   isBeingCrawled(url: string) {
+    url = normalizeUrl(url);
     return _.contains(this.beingCrawledUrls, url);
   }
 
   rememberVisitedUrls(urls: string[]) {
     urls.forEach(url => {
-      this.visitedUrls[url] = true;
+      this.visitedUrls[normalizeUrl(url)] = true;
     });
   }
 
   isVisitedUrl(url: string): boolean {
+    url = normalizeUrl(url);
     return Boolean(this.visitedUrls[url]);
   }
 
   rememberCrawledUrl(url: string) {
+    url = normalizeUrl(url);
     this.visitedUrls[url] = true;
     this.crawledUrls[url] = true;
   }
@@ -65,9 +73,13 @@ export default class State {
   finishedCrawling(url?: string) {
     //console.log("Finished crawling url = ", url);
     //console.log("beingCrawledUrls = ", this.beingCrawledUrls);
+    if (url !== undefined) {
+      url = normalizeUrl(url);
+    }
     const indexOfUrl = this.beingCrawledUrls.indexOf(url);
-  
-    this.beingCrawledUrls.splice(indexOfUrl, 1);
+    if (indexOfUrl >= 0) {
+      this.beingCrawledUrls.splice(indexOfUrl, 1);
+    }
     if (this.beingCrawledUrls.length === 0) {
       //console.log("Crawling finished!");
       this.callbacks.onCrawlingFinished(_.keys(this.crawledUrls));

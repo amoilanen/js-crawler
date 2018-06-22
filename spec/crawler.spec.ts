@@ -265,7 +265,8 @@ describe('crawler', () => {
     });
   });
 
-  //TODO: Test that normalized urls are accounted for, i.e. http://url and http://url/ should be the same url
+  //TODO: Test that urls are normalized when they are remembered
+
   //TODO: Test different RequestSuccess values and how they are handled
   //TODO: Test redirects
   //TODO: On crawling finished callback "finished" is called, executor is stopped

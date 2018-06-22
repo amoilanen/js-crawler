@@ -57,7 +57,6 @@ export default class Crawler {
   }
 
   crawlUrl(url: string, referer: string, depth: number): void {
-
       //console.log('_crawlUrl: url = %s, depth = %s', url, depth);
       if (this.state.isVisitedUrl(url) || this.state.isBeingCrawled(url)) {
         return;
