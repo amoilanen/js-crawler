@@ -159,6 +159,7 @@ Create comprehensive end-to-end tests against a local Express server.
 - Verify: `npm run e2e` passes all tests
 
 ### [ ] Step: Coverage, cleanup, and final verification
+<!-- chat-id: 699bde98-e0b9-4620-9f8a-a271e0dbf31a -->
 
 Ensure quality gates pass and clean up legacy artifacts.
 
