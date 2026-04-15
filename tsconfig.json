@@ -14,10 +14,8 @@
   },
   "include": ["src/**/*"],
   "exclude": [
-    "src/configuration.ts",
     "src/executor.ts",
     "src/request.ts",
-    "src/response.ts",
-    "src/state.ts"
+    "src/response.ts"
   ]
 }

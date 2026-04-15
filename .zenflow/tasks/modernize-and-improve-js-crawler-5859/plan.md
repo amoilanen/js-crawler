@@ -74,7 +74,8 @@ Set up the modern project foundation. All subsequent steps depend on this.
 - Run `npm install`, `npm run build`, `npm run lint` to verify setup
 - Delete old files: `karma.conf.js`, `tslint.json`, `spec/index.ts`
 
-### [ ] Step: Configuration and state modules
+### [x] Step: Configuration and state modules
+<!-- chat-id: 0240583a-f818-414a-83cb-cb4e7690c5b6 -->
 
 Implement the foundational modules that other modules depend on.
 
