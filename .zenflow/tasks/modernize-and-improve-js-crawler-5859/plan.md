@@ -104,7 +104,8 @@ Implement HTTP request handling with undici.
 - Write `spec/request.spec.ts`: test successful request, failed request, timeout, retries (mock HTTP via vi.mock or undici MockAgent), redirect chain tracking, custom headers, abort signal cancellation
 - Verify: `npm test` passes
 
-### [ ] Step: Response module
+### [x] Step: Response module
+<!-- chat-id: 9091c0e2-bb04-46ee-a655-9dbd08bcfdc3 -->
 
 Implement HTML parsing and link extraction with cheerio.
 
