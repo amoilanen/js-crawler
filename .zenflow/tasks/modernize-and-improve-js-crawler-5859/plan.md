@@ -113,7 +113,8 @@ Implement HTML parsing and link extraction with cheerio.
 - Write `spec/response.spec.ts`: test link extraction, base tag resolution, selector scoping, binary content detection, encoding handling, edge cases (empty body, malformed HTML, no links, comment-embedded links)
 - Verify: `npm test` passes
 
-### [ ] Step: Robots.txt module
+### [x] Step: Robots.txt module
+<!-- chat-id: b26d97f0-287c-42e5-a869-b6b820c543db -->
 
 Implement robots.txt fetching and caching.
 
