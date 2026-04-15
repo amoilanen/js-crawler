@@ -85,7 +85,9 @@ Implement the foundational modules that other modules depend on.
 - Write `spec/state.spec.ts`: test URL normalization, visited/crawled tracking, pendingCount, finished detection, freeze/defrost round-trip
 - Verify: `npm test` passes for these modules
 
-### [ ] Step: Executor module
+### [x] Step: Executor module
+<!-- chat-id: c808eea4-0e76-4726-a611-57f44527202e -->
+<!-- chat-id: c808eea4-0e76-4726-a611-57f44527202e -->
 
 Implement the rate-limited concurrent task executor.
 
