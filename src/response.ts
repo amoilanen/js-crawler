@@ -1,120 +1,109 @@
-import { resolve } from 'url';
-import * as _ from 'underscore';
+import * as cheerio from 'cheerio';
+import type { HttpResponse } from './types.js';
 
-export interface UrlCrawlingBehavior {
+const BODY_PLACEHOLDER = '<<...non-text content (omitted by js-crawler)...>>';
+
+const TEXT_CONTENT_TYPES = ['text/', 'application/xhtml+xml', 'application/json', 'application/xml'];
+
+export interface LinkExtractionOptions {
   ignoreRelative?: boolean;
-  shouldCrawl: (link: string) => boolean
+  shouldCrawl?: (url: string) => boolean;
+  selector?: string;
 }
 
-export interface Decodable {
-  toString(encoding: string): string
+export function isTextContent(response: HttpResponse): boolean {
+  const contentType = response.headers['content-type'];
+  if (!contentType) return false;
+  return TEXT_CONTENT_TYPES.some(prefix => contentType.startsWith(prefix));
 }
 
-export interface HttpResponse {
-  headers: {
-    [headerName: string]: string
-  },
-  body: Decodable,
-  statusCode: number,
-  request: {
-    uri: {
-      href: string
-    }
+export function isHtmlContent(response: HttpResponse): boolean {
+  const contentType = response.headers['content-type'];
+  if (!contentType) return false;
+  return contentType.startsWith('text/html') || contentType.startsWith('application/xhtml+xml');
+}
+
+export function getEncoding(response: HttpResponse): string {
+  const contentType = response.headers['content-type'] ?? '';
+  const match = /charset=([^\s;]+)/i.exec(contentType);
+  return match ? match[1].toLowerCase() : 'utf-8';
+}
+
+export function decodeBody(response: HttpResponse): string {
+  if (!isTextContent(response)) {
+    return BODY_PLACEHOLDER;
+  }
+
+  const encoding = getEncoding(response);
+  try {
+    const decoder = new TextDecoder(encoding);
+    return decoder.decode(response.body);
+  } catch {
+    return response.body.toString('utf-8');
   }
 }
 
-const BODY_PLACEHOLDER: string = '<<...non-text content (omitted by js-crawler)...>>'
+export function getBaseUrl(responseUrl: string, $: cheerio.CheerioAPI): string {
+  const baseHref = $('base').attr('href');
+  if (!baseHref) return responseUrl;
 
-export default class Response {
-  response: HttpResponse
+  try {
+    return new URL(baseHref, responseUrl).href;
+  } catch {
+    return responseUrl;
+  }
+}
 
-  constructor(response: HttpResponse) {
-    this.response = response;
+function isHttpUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+export function extractUrls(
+  response: HttpResponse,
+  options: LinkExtractionOptions = {},
+): string[] {
+  if (!isHtmlContent(response)) {
+    return [];
   }
 
-  isTextHtml(): boolean {
-    const { response } = this;
-    const isContentTypeHeaderDefined = Boolean(response && response.headers && response.headers['content-type']);
+  const { ignoreRelative = false, shouldCrawl, selector } = options;
 
-    return isContentTypeHeaderDefined && response.headers['content-type'].startsWith('text/html');
-  }
+  const body = decodeBody(response);
+  const $ = cheerio.load(body);
+  const baseUrl = getBaseUrl(response.url, $);
 
-  decode(encoded: Decodable, encoding: string): string {
-    const defaultEncoding = 'utf8';
-    if (!encoding) {
-      encoding = defaultEncoding;
-    }
+  const root = selector ? $(selector) : $.root();
+  const linkElements = root.find('a[href]');
 
-    let decodedBody: string;
+  const seen = new Set<string>();
+  const urls: string[] = [];
+
+  linkElements.each((_, el) => {
+    const href = $(el).attr('href');
+    if (!href || href.startsWith('#')) return;
+
+    if (ignoreRelative && !href.includes('://')) return;
+
+    let resolved: string;
     try {
-      decodedBody = encoded.toString(encoding);
-    } catch (decodingError) {
-      decodedBody = encoded.toString(defaultEncoding);
+      resolved = new URL(href, baseUrl).href;
+    } catch {
+      return;
     }
-    return decodedBody;
-  }
 
-  getBody(): string {
-    if (!this.isTextHtml()) {
-      return BODY_PLACEHOLDER;
-    }
-    const { response } = this;
-    const encoding = response.headers['content-encoding'];
+    if (!isHttpUrl(resolved)) return;
+    if (seen.has(resolved)) return;
+    seen.add(resolved);
 
-    return this.decode(response.body, encoding);
-  }
+    if (shouldCrawl && !shouldCrawl(resolved)) return;
 
-  stripComments(str: string): string {
-    return str.replace(/<!--.*?-->/g, '');
-  }
+    urls.push(resolved);
+  });
 
-  getBaseUrl(responseUrl: string, body: string): string {
-
-    /*
-     * Resolving the base url following
-     * the algorithm from https://www.w3.org/TR/html5/document-metadata.html#the-base-element
-     */
-    const baseUrlRegex = /<base href="(.*?)">/;
-    const baseUrlInPage = body.match(baseUrlRegex);
-    if (!baseUrlInPage) {
-      return responseUrl;
-    }
-    const baseUrl = baseUrlInPage[1];
-
-    return resolve(responseUrl, baseUrl);
-  };
-
-  isUrlProtocolSupported(link: string): boolean {
-    return link.startsWith('http://') || link.startsWith('https://');
-  }
-
-  getHrefFrom(linkHtml: string): string {
-    const match = /href=[\"\'](.*?)[#\"\']/i.exec(linkHtml);
-
-    return match[1];
-  }
-
-  getAllUrls(responseUrl: string, body: string, behavior: UrlCrawlingBehavior): string[] {
-    if (!this.isTextHtml()) {
-      return [];
-    }
-    body = this.stripComments(body);
-    const baseUrl = this.getBaseUrl(responseUrl, body);
-    const linksRegex = behavior.ignoreRelative ? /<a[^>]+?href=["'].*?:\/\/.*?["']/gmi : /<a[^>]+?href=["'].*?["']/gmi;
-    const links = body.match(linksRegex) || [];
-
-    //console.log('body = ', body);
-    const urls = _.chain(links)
-      .map(link =>
-        resolve(baseUrl, this.getHrefFrom(link))
-      )
-      .uniq()
-      .filter(link =>
-        this.isUrlProtocolSupported(link) && behavior.shouldCrawl(link)
-      )
-      .value();
-
-    //console.log('urls to crawl = ', urls);
-    return urls;
-  };
+  return urls;
 }
