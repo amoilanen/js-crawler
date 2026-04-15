@@ -133,7 +133,8 @@ Implement the core Crawler class that orchestrates all modules.
 - Write `spec/crawler.spec.ts`: test full crawl flow with mocked request module — depth control, URL deduplication, shouldCrawl/shouldCrawlLinksFrom filtering, stop() mid-crawl, maxPages, Promise resolution, event emission, callback compatibility, freeze/defrost, debug mode, robots.txt integration
 - Verify: `npm test` passes, `npm run build` succeeds, `npm run lint` passes
 
-### [ ] Step: E2E tests
+### [x] Step: E2E tests
+<!-- chat-id: 24f85582-fea3-4aa7-a8d1-cae690651f3c -->
 
 Create comprehensive end-to-end tests against a local Express server.
 
