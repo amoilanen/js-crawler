@@ -59,7 +59,8 @@ If the feature is trivial and doesn't warrant full specification, update this wo
 
 Save to `{@artifacts_path}/plan.md`.
 
-### [ ] Step: Project scaffolding and build infrastructure
+### [x] Step: Project scaffolding and build infrastructure
+<!-- chat-id: aed74bca-73c5-47a5-998b-2c648996e68a -->
 
 Set up the modern project foundation. All subsequent steps depend on this.
 
