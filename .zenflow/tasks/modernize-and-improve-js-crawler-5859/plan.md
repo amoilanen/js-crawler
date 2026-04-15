@@ -95,7 +95,8 @@ Implement the rate-limited concurrent task executor.
 - Write `spec/executor.spec.ts`: test rate limiting (tasks don't exceed maxRatePerSecond), concurrency limiting, abort/stop behavior, queue draining, edge cases (submit after stop, empty queue)
 - Verify: `npm test` passes
 
-### [ ] Step: Request module
+### [x] Step: Request module
+<!-- chat-id: e6cffe50-9d2c-451a-8ffb-27fc6670767d -->
 
 Implement HTTP request handling with undici.
 
