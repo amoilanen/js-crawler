@@ -122,7 +122,9 @@ Implement robots.txt fetching and caching.
 - Write `spec/robots.spec.ts`: test parsing rules, caching (second call doesn't fetch again), graceful failure (network error = allow), different user agents, disallow matching
 - Verify: `npm test` passes
 
-### [ ] Step: Crawler class
+### [x] Step: Crawler class
+<!-- chat-id: 801358db-bcf4-49ec-ad8d-09f92cb32d43 -->
+<!-- chat-id: 801358db-bcf4-49ec-ad8d-09f92cb32d43 -->
 
 Implement the core Crawler class that orchestrates all modules.
 
